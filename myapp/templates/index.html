@@ -1,0 +1,229 @@
+{% extends "page.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    {% if is_have_sheet %}
+    <div class="text-center mb-5">
+        <h1 class="text-primary fw-bold">Welcome, {{ name }}!</h1>
+        <p class="text-muted">It looks like you haven’t added a Google Sheet link yet.</p>
+        <p class="text-danger fw-bold">Please add the link to proceed with generating posters.</p>
+        <a href="{% url 'sheet_url_upload' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus-circle"></i> Add Google Sheet Link
+        </a>
+    </div>
+    {% else %}
+<div class="container-fluid mt-4">
+    <div class="row vh-100">
+        <!-- Left: Form Section (Scrollable) -->
+        <div class="col-lg-6 overflow-auto form-container p-4 border-end border-secondary" style="height: 100vh;">
+            <form method="POST" action="{% url 'generate_poster' %}">
+                {% csrf_token %}
+                <!-- Companies Section -->
+                <div id="companies-section">
+                    <label class="form-label text-primary fw-bold fs-4">Companies & Students</label>
+                    <div class="card company-block mb-4 p-3 border-2 border-primary shadow-sm">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-secondary fw-bold">Company Name</label>
+                                <input type="text" class="form-control company-name" name="company_name[]" required placeholder="Enter Company Name">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary fw-bold">LPA</label>
+                                <input type="text" class="form-control company-lpa" name="lpa[]" required placeholder="Enter LPA">
+                            </div>
+                            <div class="student-prns">
+                                <label class="form-label text-secondary fw-bold">Students (PRNs)</label>
+                                <div class="input-group mb-2 student-prn-group">
+                                    <input type="text" class="form-control student-prn" name="prns[0][]" placeholder="Enter PRN" required data-company-index="0" list="prn-suggestions-0">
+                                    <button type="button" class="btn btn-outline-danger remove-prn">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm mt-2 add-student-prn">
+                                <i class="fas fa-user-plus"></i> Add Student
+                            </button>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm mt-2 remove-company">
+                            <i class="fas fa-trash-alt"></i> Remove Company
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Company Button -->
+                <div class="text-center mt-4">
+                    <button type="button" id="add-company" class="btn btn-outline-success btn-lg btn-glow">
+                        <i class="fas fa-plus-circle"></i> Add Another Company
+                    </button>
+                </div>
+
+                <!-- Submit and Save Poster -->
+                <div class="text-center mt-5">
+                    <button type="submit" name="preview" class="btn btn-success btn-lg btn-glow">
+                        <i class="fas fa-save"></i> Save Poster
+                    </button>
+                     <a class="btn btn-secondary btn-lg btn-glow" href="{% url 'download_poster' %}">click here to download the poster</a>
+                </div>
+            </form>
+        </div>
+ 
+        <!-- Right: PDF Preview Section (Fixed) -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center bg-light p-4 preview-container">
+            <div class="card shadow-lg w-100 h-100">
+                <h5 class="text-primary fw-bold p-3">Poster Preview</h5>
+                <iframe id="poster-preview" class="pdf-iframe w-100 h-100" 
+                        src="{% url 'download_poster' %}" 
+                        frameborder="0">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<!-- Bootstrap & Font Awesome -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+<!-- Custom Styles -->
+<style>
+    /* Ensure Full Height for Left and Right Sections */
+    .form-container {
+        max-height: 100vh;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+    }
+
+    .preview-container {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Button Glow Effect */
+    .btn-glow {
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-glow:hover {
+        box-shadow: 0px 6px 15px rgba(0, 123, 255, 0.3);
+    }
+
+    /* Company Block Styling */
+    .company-block {
+        background: #f8f9fa;
+        border-radius: 12px;
+        border-left: 6px solid #0d6efd;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .company-block:hover {
+        transform: scale(1.02);
+    }
+
+    /* Input Focus Glow */
+    input:focus {
+        box-shadow: 0 0 5px #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+
+    /* PDF Iframe Styling */
+    .pdf-iframe {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+</style>
+
+<!-- JavaScript Section -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let companyIndex = 1;
+
+        // Add new company block
+        document.getElementById('add-company').addEventListener('click', () => {
+            const companyTemplate = `
+            <div class="card mb-4 shadow-sm company-block border-primary">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="company_name" class="form-label text-secondary fw-bold">Company Name</label>
+                        <input type="text" class="form-control company-name" name="company_name[]" required placeholder="Enter Company Name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="lpa" class="form-label text-secondary fw-bold">LPA</label>
+                        <input type="text" class="form-control company-lpa" name="lpa[]" required placeholder="Enter LPA">
+                    </div>
+                    <div class="student-prns">
+                        <label class="form-label text-secondary fw-bold">Students (PRNs)</label>
+                        <div class="input-group mb-2 student-prn-group">
+                            <input type="text" class="form-control student-prn" name="prns[${companyIndex}][]" placeholder="Enter PRN" required data-company-index="${companyIndex}" list="prn-suggestions-${companyIndex}">
+                            <button type="button" class="btn btn-outline-danger remove-prn">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2 add-student-prn">
+                        <i class="fas fa-user-plus"></i> Add Student
+                    </button>
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm mt-2 remove-company">
+                    <i class="fas fa-trash-alt"></i> Remove Company
+                </button>
+            </div>
+            `;
+            document.getElementById('companies-section').insertAdjacentHTML('beforeend', companyTemplate);
+            companyIndex++;
+        });
+
+        // Remove company block
+        document.getElementById('companies-section').addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-company')) {
+                e.target.closest('.company-block').remove();
+            }
+        });
+
+        // Add PRN dynamically
+        document.getElementById('companies-section').addEventListener('click', (e) => {
+            if (e.target.classList.contains('add-student-prn')) {
+                const companyBlock = e.target.closest('.company-block');
+                const companyIndex = Array.from(document.querySelectorAll('.company-block')).indexOf(companyBlock);
+                const prnTemplate = `
+                <div class="input-group mb-2 student-prn-group">
+                    <input type="text" class="form-control student-prn" name="prns[${companyIndex}][]" placeholder="Enter PRN" required data-company-index="${companyIndex}" list="prn-suggestions-${companyIndex}">
+                    <button type="button" class="btn btn-outline-danger remove-prn">
+                        <i class="fas fa-times"></i> Remove
+                    </button>
+                </div>
+                `;
+                companyBlock.querySelector('.student-prns').insertAdjacentHTML('beforeend', prnTemplate);
+            }
+        });
+
+        // Remove PRN field
+        document.getElementById('companies-section').addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-prn')) {
+                e.target.closest('.student-prn-group').remove();
+            }
+        });
+
+        // PRN validation and suggestions
+        document.getElementById('companies-section').addEventListener('input', (e) => {
+            if (e.target.classList.contains('student-prn')) {
+                const prnInput = e.target;
+                const prnValue = prnInput.value;
+
+                // Fetch validation and suggestions
+                fetch(`/validate-prn?prn=${prnValue}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.valid) {
+                            prnInput.classList.remove('is-invalid');
+                            prnInput.classList.add('is-valid');
+                        } else {
+                            prnInput.classList.remove('is-valid');
+                            prnInput.classList.add('is-invalid');
+                        }
+                    });
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Colleges{% endblock %}
+
+{% block content %}
+    <h2>Manage Colleges</h2>
+
+    <!-- Add College Modal Trigger Button -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCollegeModal">
+        Add College
+    </button>
+
+    <!-- Colleges Table -->
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for college in colleges %}
+                <tr>
+                    <td>{{ college.name }}</td>
+                    <td>{{ college.email }}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editCollegeModal-{{ college.id }}">Edit</button>
+                        <form method="POST" action="{% url 'delete_college' college.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Add College Modal -->
+    <div class="modal fade" id="addCollegeModal" tabindex="-1" aria-labelledby="addCollegeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'create_college' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addCollegeModalLabel">Add College</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Toggle Switch -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="toggleBulkUpload">
+                                <label class="form-check-label" for="toggleBulkUpload">Bulk Upload</label>
+                            </div>
+                        </div>
+
+                        <!-- Individual College Form -->
+                        <div id="individualForm">
+                            <!-- <span>Individual Entry</span> -->
+                            <div class="mb-3">
+                                <label for="name" class="form-label">College Name</label>
+                                <input type="text" class="form-control" id="name" name="name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password (Optional, defaults to 123)</label>
+                                <input type="password" class="form-control" id="password" name="password">
+                            </div>
+                            <div class="mb-3">
+                                <label for="logo" class="form-label">Logo (Optional)</label>
+                                <input type="file" class="form-control" id="logo" name="logo">
+                            </div>
+                        </div>
+
+                        <!-- Bulk Upload Form -->
+                        <div id="bulkUploadForm" style="display: none;">
+                            <div class="mb-3">
+                                <label for="csv_file" class="form-label">Upload CSV</label>
+                                <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv">
+                            </div>
+                            <p class="text-muted">Ensure the CSV format: <strong>name,email</strong></p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit College Modal -->
+    {% for college in colleges %}
+        <div class="modal fade" id="editCollegeModal-{{ college.id }}" tabindex="-1" aria-labelledby="editCollegeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="POST" action="{% url 'edit_college' college.id %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editCollegeModalLabel">Edit College</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="name-{{ college.id }}" class="form-label">College Name</label>
+                                <input type="text" class="form-control" id="name-{{ college.id }}" name="name" value="{{ college.name }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email-{{ college.id }}" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email-{{ college.id }}" name="email" value="{{ college.email }}" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <!-- JavaScript to Toggle Forms -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggleSwitch = document.getElementById("toggleBulkUpload");
+            const individualForm = document.getElementById("individualForm");
+            const bulkUploadForm = document.getElementById("bulkUploadForm");
+
+            toggleSwitch.addEventListener("change", function () {
+                if (toggleSwitch.checked) {
+                    individualForm.style.display = "none";
+                    bulkUploadForm.style.display = "block";
+                } else {
+                    individualForm.style.display = "block";
+                    bulkUploadForm.style.display = "none";
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

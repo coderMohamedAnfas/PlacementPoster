@@ -1,0 +1,97 @@
+{% extends 'page.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">🎓 Manage Students</h2>
+
+    <!-- 🌿 Search & Bulk Action -->
+    <form method="GET" class="mb-3 d-flex">
+        <input type="text" name="q" class="form-control me-2" placeholder="Search by Name or PRN" value="{{ request.GET.q }}">
+        <button type="submit" class="btn btn-success">Search</button>
+    </form>
+
+    <!-- 🌿 Student List Table -->
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="selectAll"></th>
+                <th>Photo</th>
+                <th>PRN</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td><input type="checkbox" name="student_ids" value="{{ student.id }}"></td>
+                <td>
+                    <img src="{{ student.photo.url }}" class="rounded-circle" width="50" height="50" alt="Photo">
+                </td>
+                <td>{{ student.prn }}</td>
+                <td>{{ student.name }}</td>
+                <td>{{ student.department }}</td>
+                <td>
+                    {% if student.prn in placed_prns %}
+                    <span class="badge bg-success">Placed</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Not Placed</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'edit_student' student.id %}" class="btn btn-sm btn-info">Edit</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 🌿 Pagination Controls -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if students.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ students.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ students.number }} of {{ students.paginator.num_pages }}</span>
+            </li>
+
+            {% if students.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ students.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ students.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+</div>
+
+<script>
+    // Select/Deselect All
+    document.getElementById('selectAll').addEventListener('change', function() {
+        let checkboxes = document.querySelectorAll('input[name="student_ids"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+</script>
+{% endblock %}

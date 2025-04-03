@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- <div class="container mt-4"> -->
+    <!-- <h3 class="text-primary fw-bold text-center">Clear Student Data</h3> -->
+
+    <div class="card shadow-lg p-4 rounded-4 border-0 mt-3">
+        <!-- Form -->
+        <form method="POST" id="deleteForm">
+            {% csrf_token %}
+
+            <!-- Search Bar -->
+            <div class="mb-3">
+                <input type="text" id="search_colleges" class="form-control" placeholder="Search College...">
+            </div>
+
+            <!-- Select All Checkbox -->
+            <div class="form-check form-switch text-left mb-3">
+                <input class="form-check-input custom-checkbox" type="checkbox" id="select_all">
+                <label class="form-check-label fw-bold" for="select_all">Select All</label>
+            </div>
+
+            <!-- College List -->
+            <div class="college-list p-3 border rounded-4 shadow-sm bg-light">
+                {% for college in colleges %}
+                <div class="form-check form-switch d-flex align-items-center mb-2 college-item" data-name="{{ college.name|lower }}">
+                    <input class="form-check-input custom-checkbox college-checkbox" type="checkbox" name="college_ids" value="{{ college.id }}" id="college_{{ college.id }}">
+                    <label class="form-check-label ms-2 college-label" for="college_{{ college.id }}">{{ college.name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Action Button -->
+            <div class="text-center mt-3">
+                <button type="button" class="btn btn-danger px-4 py-2 fw-bold rounded-pill" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                    <i class="fas fa-trash-alt"></i> Clear Data
+                </button>
+            </div>
+        </form>
+    </div>
+<!-- </div> -->
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-custom fw-bold" id="confirmDeleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the selected colleges and their student data? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Features -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const selectAllCheckbox = document.getElementById("select_all");
+        const checkboxes = document.querySelectorAll(".college-checkbox");
+        const searchInput = document.getElementById("search_colleges");
+        const collegeItems = document.querySelectorAll(".college-item");
+        const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+        const deleteForm = document.getElementById("deleteForm");
+
+        // Select All Logic
+        selectAllCheckbox.addEventListener("change", function () {
+            checkboxes.forEach(chk => chk.checked = this.checked);
+        });
+
+        checkboxes.forEach(chk => {
+            chk.addEventListener("change", function () {
+                if (!this.checked) {
+                    selectAllCheckbox.checked = false;
+                } else if (Array.from(checkboxes).every(chk => chk.checked)) {
+                    selectAllCheckbox.checked = true;
+                }
+            });
+        });
+
+        // Search Colleges Logic (Highlight & Bring Matching Items to Top)
+        searchInput.addEventListener("keyup", function () {
+            let filter = searchInput.value.toLowerCase();
+            let matchingItems = [];
+            let nonMatchingItems = [];
+
+            collegeItems.forEach(function (item) {
+                let collegeName = item.dataset.name;
+                if (collegeName.includes(filter)) {
+                    item.querySelector('.college-label').innerHTML = highlightMatch(item.textContent, filter);
+                    matchingItems.push(item);
+                } else {
+                    item.querySelector('.college-label').innerHTML = item.textContent;
+                    nonMatchingItems.push(item);
+                }
+            });
+
+            // Rearrange the list to bring matching results to top
+            let collegeList = document.querySelector('.college-list');
+            collegeList.innerHTML = "";  // Clear existing list
+            matchingItems.forEach(item => collegeList.appendChild(item)); // Append matching items first
+            nonMatchingItems.forEach(item => collegeList.appendChild(item)); // Then non-matching items
+        });
+
+        // Function to Highlight Search Matches
+        function highlightMatch(text, term) {
+            if (!term) return text;
+            let regex = new RegExp(`(${term})`, "gi");
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        // Submit Form on Modal Confirmation
+        confirmDeleteBtn.addEventListener("click", function () {
+            deleteForm.submit();  // Manually submit the form
+        });
+    });
+</script>
+
+<!-- CSS Styling -->
+<style>
+    .text-custom{
+        color: linear-gradient(to right, #6a11cb, #2575fc);
+        /* background: linear-gradient(to right, #6a11cb, #2575fc); */
+    }
+    .card {
+        animation: fadeInUp 0.6s ease-in-out;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .custom-checkbox {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        border: 2px solid #007bff;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .custom-checkbox:checked {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .college-list {
+        background: #f8f9fa;
+        max-height: 250px;
+        overflow-y: auto;
+    }
+
+    .btn-danger {
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        border: none;
+        transition: all 0.3s;
+    }
+    
+    .btn-danger:hover {
+        transform: scale(1.05);
+    }
+
+    .highlight {
+        background-color: rgb(243, 227, 7);
+        font-weight: bold;
+    }
+</style>
+{% endblock %}

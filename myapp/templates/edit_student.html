@@ -1,0 +1,211 @@
+{% extends 'page.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">✏️ Edit Student</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" value="{{ student.name }}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Department</label>
+            <input type="text" name="department" value="{{ student.department }}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <!-- 🌿 Current Photo Display -->
+            <label class="form-label">Current Photo</label>
+            <br>
+            <img id="studentPhoto" src="{{ student.photo.url }}" class="rounded-circle" width="150" height="150" alt="Student Photo">
+            <br>
+            <button type="button" id="editPhotoBtn" class="btn btn-warning mt-2">Edit Photo</button>
+            <button type="button" id="uploadNewPhotoBtn" class="btn btn-primary mt-2">Upload New Photo</button>
+        </div>
+        
+        <!-- 🌿 Cropper Modal for Editing Photo -->
+        <div id="cropModal" class="modal fade" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Crop & Edit Photo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="cropperImage" style="max-width: 100%; height: auto;">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="rotateLeftBtn" class="btn btn-secondary">↺ Rotate Left</button>
+                        <button type="button" id="rotateRightBtn" class="btn btn-secondary">↻ Rotate Right</button>
+                        <button type="button" id="saveCropBtn" class="btn btn-success">Save Changes</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 🌿 Image Upload Section -->
+        <div id="uploadSection" class="mb-3" style="display: none;">
+            <label class="form-label">Upload New Photo</label>
+            <input type="file" id="newPhotoInput" class="form-control" accept="image/*">
+            <button type="button" id="saveUploadBtn" class="btn btn-success mt-3">Save New Photo</button>
+            <button type="button" id="cancelUploadBtn" class="btn btn-danger mt-3">Cancel</button>
+        </div>
+        
+        
+
+        <button type="submit" class="btn btn-success">Update Details</button>
+    </form>
+</div>
+
+<script>
+    // 🌿 Upload and Update Photo using AJAX
+    document.getElementById('updatePhotoBtn').addEventListener('click', function () {
+        let photoInput = document.getElementById('photoInput').files[0];
+        if (!photoInput) {
+            alert('Please select a photo first.');
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('photo', photoInput);
+
+        fetch("{% url 'update_photo' student.id %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error uploading photo!');
+            }
+        });
+    });
+</script>
+<script>
+    let cropper;
+    let croppedBlob;
+
+    // 🌿 Open Cropper Modal for Editing Existing Photo
+    document.getElementById('editPhotoBtn').addEventListener('click', function () {
+        document.getElementById('cropperImage').src = document.getElementById('studentPhoto').src;
+        let cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+        cropModal.show();
+
+        setTimeout(() => {
+            cropper = new Cropper(document.getElementById('cropperImage'), {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+            });
+        }, 500);
+    });
+
+    // 🌿 Rotate Left
+    document.getElementById('rotateLeftBtn').addEventListener('click', function () {
+        cropper.rotate(-90);
+    });
+
+    // 🌿 Rotate Right
+    document.getElementById('rotateRightBtn').addEventListener('click', function () {
+        cropper.rotate(90);
+    });
+
+    // 🌿 Save Cropped Image
+    document.getElementById('saveCropBtn').addEventListener('click', function () {
+        cropper.getCroppedCanvas({
+            width: 300,
+            height: 300,
+        }).toBlob(function (blob) {
+            croppedBlob = blob;
+            uploadCroppedPhoto();
+            bootstrap.Modal.getInstance(document.getElementById('cropModal')).hide();
+        });
+    });
+
+    // 🌿 Upload Cropped Photo
+    function uploadCroppedPhoto() {
+        if (!croppedBlob) {
+            alert('No changes were made!');
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('photo', croppedBlob, '{{ student.prn }}.jpg');
+
+        fetch("{% url 'update_photo' student.id %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error updating photo!');
+            }
+        });
+    }
+
+    // 🌿 Show Upload New Photo Section
+    document.getElementById('uploadNewPhotoBtn').addEventListener('click', function () {
+        document.getElementById('uploadSection').style.display = 'block';
+        document.getElementById('studentPhoto').style.display = 'none';
+        document.getElementById('editPhotoBtn').style.display = 'none';
+        document.getElementById('uploadNewPhotoBtn').style.display = 'none';
+    });
+
+    // 🌿 Cancel Upload Section
+    document.getElementById('cancelUploadBtn').addEventListener('click', function () {
+        document.getElementById('uploadSection').style.display = 'none';
+        document.getElementById('studentPhoto').style.display = 'block';
+        document.getElementById('editPhotoBtn').style.display = 'block';
+        document.getElementById('uploadNewPhotoBtn').style.display = 'block';
+    });
+
+    // 🌿 Save New Uploaded Photo
+    document.getElementById('saveUploadBtn').addEventListener('click', function () {
+        let fileInput = document.getElementById('newPhotoInput');
+        if (fileInput.files.length > 0) {
+            let formData = new FormData();
+            formData.append('photo', fileInput.files[0], '{{ student.prn }}.jpg');
+
+            fetch("{% url 'update_photo' student.id %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error uploading photo!');
+                }
+            });
+        } else {
+            alert('Please select an image to upload.');
+        }
+    });
+</script>
+
+
+{% endblock %}

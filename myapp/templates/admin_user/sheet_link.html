@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Send Email to Colleges{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h3>Send Email to Colleges</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="subject" class="form-label">Subject</label>
+                <input 
+                    type="text" 
+                    id="subject" 
+                    name="subject" 
+                    class="form-control" 
+                    placeholder="Enter the email subject" 
+                    required>
+            </div>
+            <div class="mb-3">
+                <label for="message" class="form-label">Message</label>
+                <textarea 
+                    id="message" 
+                    name="message" 
+                    class="form-control" 
+                    rows="5" 
+                    placeholder="Enter the email message" 
+                    required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Send Email</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

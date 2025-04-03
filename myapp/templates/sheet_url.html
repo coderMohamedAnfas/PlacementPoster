@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Placement Sheet</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        /* Background Styling */
+        body {
+            background: linear-gradient(135deg, #002855, #007bff);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Card Styling */
+        .card {
+            background-color: white;
+            color: #333;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .card-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #002855, #007bff);
+            color: white;
+            padding: 15px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        /* Step Transition */
+        .step {
+            display: none;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+        }
+
+        .step.active {
+            display: block;
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        /* Button Styling */
+        .btn-primary {
+            background: #007bff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 100%;
+            transition: 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .form-control {
+            border-radius: 8px;
+            font-size: 1rem;
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* Fetching Overlay */
+        .fetching-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            flex-direction: column;
+        }
+        .fetching-overlay1 {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            flex-direction: column;
+        }
+        /* Animation Box */
+        .fetching-animation {
+            position: relative;
+            width: 280px;
+            height: 100px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .packet {
+            width: 15px;
+            height: 15px;
+            background: #007bff;
+            border-radius: 50%;
+            position: absolute;
+            left: 10%;
+            animation: movePacket 1.5s infinite linear;
+        }
+
+        @keyframes movePacket {
+            0% { left: 10%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { left: 90%; opacity: 0; }
+        }
+
+        .google-icon, .server-icon {
+            font-size: 2rem;
+            font-weight: bold;
+            position: absolute;
+        }
+
+        .google-icon {
+            left: 5%;
+            color: green;
+        }
+
+        .server-icon {
+            right: 5%;
+            color: #007bff;
+        }
+
+        /* Fetching Text */
+        .fetching-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+          /* Fetching Text */
+          .fetching-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* Shrinking Packet Animation */
+        .shrink {
+            animation: shrinkPacket 2s forwards;
+        }
+
+        @keyframes shrinkPacket {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* Typing Animation */
+        .typing-text {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: 3px solid white;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+    </style>
+</head>
+<body>
+    {% if messages %}
+    <!-- Flash Messages -->
+    <div class="container mt-4">
+       
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|cut:'.' }} alert-dismissible fade show" role="alert">
+                    {{ message }} {{ message.tags|cut:"."|lower }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+       
+    </div>
+    {% endif %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">Upload Google Sheet</div>
+
+        <div class="card-body">
+            <form id="uploadForm">
+                {% csrf_token %}
+
+                <!-- Step 1: Google Sheet Verification -->
+                <div class="step active" id="step1">
+                    <h5>Step 1: Verify Google Sheet</h5>
+                    <input type="url" id="sheet_url" class="form-control mt-2" placeholder="Enter Google Sheet URL">
+                    <div id="sheet_verification" class="mt-2"></div>
+                    <button type="button" class="btn btn-primary mt-3" onclick="verifySheet()">Next</button>
+                </div>
+
+                <!-- Step 2: Image Folder Verification -->
+                <div class="step" id="step2">
+                    <h5>Step 2: Verify Image Folder</h5>
+                    <input type="url" id="folder_url" class="form-control mt-2" placeholder="Enter Image Folder URL">
+                    <div id="folder_verification" class="mt-2"></div>
+                    <button type="button" class="btn btn-primary mt-3" onclick="verifyFolder()">Start Fetching</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Fetching Overlay -->
+    <div class="fetching-overlay" id="fetchingOverlay">
+        <div class="fetching-animation">
+            <span class="google-icon">📄</span>
+            <div class="packet"></div>
+            <span class="server-icon">🖥️</span>
+        </div>
+        <div class="fetching-text" id="fetchingText">Fetching Data...</div>
+    </div>
+    <!-- <div class="fetching-overlay1" id="fetchingOverlay1">
+        <div ></div>
+    </div> -->
+</div>
+
+<!-- JavaScript -->
+<script>
+function verifySheet() {
+    let sheetUrl = document.getElementById("sheet_url").value;
+    if (!sheetUrl.includes("docs.google.com/spreadsheets")) {
+        document.getElementById("sheet_verification").innerHTML = '<div class="text-danger">❌ Invalid Google Sheet URL!</div>';
+        return;
+    }
+
+    document.getElementById("sheet_verification").innerHTML = '<div class="text-success">✅ Verified!</div>';
+    setTimeout(() => nextStep(1), 1000);
+}
+
+function verifyFolder() {
+    let folderUrl = document.getElementById("folder_url").value;
+    if (!folderUrl.includes("drive.google.com/drive/folders")) {
+        document.getElementById("folder_verification").innerHTML = '<div class="text-danger">❌ Invalid Google Drive folder URL!</div>';
+        return;
+    }
+
+    document.getElementById("folder_verification").innerHTML = '<div class="text-success">✅ Verified!</div>';
+    setTimeout(() => {
+        nextStep(2);
+        startFetching();
+    }, 1000);
+}
+
+function nextStep(step) {
+    $(".step").removeClass("active");
+    $(`#step${step + 1}`).addClass("active");
+}
+
+function startFetching() {
+    $("#fetchingOverlay").css("display", "flex").fadeIn();
+
+    $.ajax({
+        url: "{% url 'sheet_url_upload' %}",
+        type: "POST",
+        data: {
+            sheet_url: $("#sheet_url").val(),
+            folder_url: $("#folder_url").val(),
+            csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val()
+        },
+        success: function(response) {
+            if (response.success) {
+                setTimeout(() => {
+                    $(".packet").addClass("shrink"); // Shrink & Fade Packet
+                }, 2000);
+
+                setTimeout(() => {
+                    $("#fetchingText").html('<span class="typing-text">Redirecting to Home Page...</span>');
+                    $(".typing-text").css("animation", "typing 2s steps(22, end) forwards");
+                }, 4000);
+
+                setTimeout(() => {
+                    $("#fetchingOverlay").fadeOut(); // Final Fade-Out
+                    setTimeout(() => {
+                        window.location.href = "{% url 'index' %}";
+                    }, 1000);
+                }, 6000);
+            } else {
+                alert("Fetching failed. Please try again.");
+            }
+        },
+        error: function() {
+            $("#fetchingOverlay").fadeOut();
+            alert("Error occurred while fetching data.");
+            nextStep(1);
+        }
+    });
+}
+
+</script>
+
+</body>
+</html>
+

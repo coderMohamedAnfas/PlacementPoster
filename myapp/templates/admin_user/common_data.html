@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Common Data{% endblock %}
+
+{% block content %}
+<h1>Manage Common Data</h1>
+<form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="start_year" class="form-label">Start Year</label>
+        <input
+            type="date"
+            id="start_year"
+            name="start_year"
+            class="form-control"
+            value="{{ data.start_year|date:'Y-m-d' }}"
+            required
+        >
+    </div>
+    <div class="mb-3">
+        <label for="prn_field" class="form-label">PRN Field</label>
+        <input
+            type="text"
+            id="prn_field"
+            name="prn_field"
+            class="form-control"
+            value="{{ data.prn_field }}"
+        >
+    </div>
+    <div class="mb-3">
+        <label for="image_field" class="form-label">Image Field</label>
+        <input
+            type="text"
+            id="image_field"
+            name="image_field"
+            class="form-control"
+            value="{{ data.image_field }}"
+        >
+    </div>
+    <div class="mb-3">
+        <label for="name_field" class="form-label">Name Field</label>
+        <input
+            type="text"
+            id="name_field"
+            name="name_field"
+            class="form-control"
+            value="{{ data.name_field }}"
+        >
+    </div>
+    <div class="mb-3">
+        <label for="department_field" class="form-label">Department Field</label>
+        <input
+            type="text"
+            id="department_field"
+            name="department_field"
+            class="form-control"
+            value="{{ data.department_field }}"
+        >
+    </div>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+</form>
+{% endblock %}

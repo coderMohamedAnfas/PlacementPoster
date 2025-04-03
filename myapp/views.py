@@ -701,6 +701,32 @@ import math
 from reportlab.lib.colors import HexColor, Color
 from reportlab.pdfgen import canvas
 
+
+def draw_college_name(pdf, college_name, x, y, max_width):
+    font_size = 18  # Start with a larger font size
+    pdf.setFont("Helvetica-Bold", font_size)
+
+    # Reduce font size if text width exceeds max_width
+    while pdf.stringWidth(college_name, "Helvetica-Bold", font_size) > max_width and font_size > 13:
+        font_size -= 1
+        pdf.setFont("Helvetica-Bold", font_size)
+
+    # If still too long, split into multiple lines
+    if pdf.stringWidth(college_name, "Helvetica-Bold", font_size) > max_width:
+        words = college_name.split()
+        line1, line2 = "", ""
+
+        for word in words:
+            if pdf.stringWidth(line1 + word, "Helvetica-Bold", font_size) < max_width:
+                line1 += word + " "
+            else:
+                line2 += word + " "
+
+        pdf.drawCentredString(x, y+10, line1.strip())
+        pdf.drawCentredString(x, y - 5, line2.strip())  # Adjust spacing for second line
+    else:
+        pdf.drawCentredString(x, y, college_name)
+
 def draw_full_page_background_pattern(pdf, page_width, page_height, pattern_style):
     """
     Draws a full-page background pattern with various styles.
@@ -990,7 +1016,8 @@ def generate_poster_pdf(request):
         pdf.line(30, page_height - 55, page_width - 30, page_height - 55)
 
         pdf.setFont("Helvetica-Bold", 18)
-        pdf.drawCentredString(page_width / 2, page_height - 80, college_name.upper())
+        draw_college_name(pdf, college_name, page_width / 2, page_height - 80, max_width=page_width-170)
+        # pdf.drawCentredString(page_width / 2, page_height - 80, college_name.upper())
         pdf.line(110, page_height - 93, page_width - 33, page_height - 93)
         pdf.line(30, page_height - 130, page_width - 30, page_height - 130)
 
@@ -1000,7 +1027,7 @@ def generate_poster_pdf(request):
         pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
 
         if college_logo:
-            pdf.drawImage(college_logo, 30, page_height - 75, width=60, height=60, mask='auto')
+            pdf.drawImage(college_logo, 20, page_height - 75, width=60, height=60, mask='auto')
 
     x, y = margin + 9, page_height - 280
     draw_header_footer()

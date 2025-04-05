@@ -125,8 +125,12 @@ def fetch_google_sheet_data(request, task_id):
     processed = 0
 
     for row in data:
+        prn=row.get(DATA.prn_field, ""),
+        if prn == None or prn == "":
+            continue
         student, created = Student.objects.update_or_create(
             prn=row.get(DATA.prn_field, ""),
+           
             defaults={
                 'name': row.get(DATA.name_field, ""),
                 'department': row.get(DATA.department_field, ""),
@@ -983,7 +987,7 @@ def generate_poster_pdf(request):
     pdf = canvas.Canvas(buffer, pagesize=A4)
     draw_gradient_background(pdf, page_width, page_height)
     pdf.setTitle(college_name)
-
+    # pdf.setPageCompression(True)
     # Background color (Light Grey)
     pdf.setFillColor(HexColor("#f5ede4"))
     pdf.rect(0, 0, page_width, page_height, fill=1, stroke=0)
@@ -1041,6 +1045,7 @@ def generate_poster_pdf(request):
         company_name = entry.get('company', 'Unknown Company')
         prn = entry.get('prn')
         if not prn:
+            messages.error(request,f"No Student With PRN {prn}")
             continue
 
         # Assign index to company if not already assigned
@@ -1080,8 +1085,10 @@ def generate_poster_pdf(request):
                 pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
 
                 # Display company name above the group
-                pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
+                pdf.setFillColor(HexColor("#333333"))  
                 pdf.setFont("Helvetica-Bold", 11)
+                print(current_company)
+                print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
                 draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
 
             # Reset values for the new company
@@ -1097,11 +1104,15 @@ def generate_poster_pdf(request):
             # Draw the border for the previous row's company
             width = (students_in_current_row * (image_size + student_spacing)) - student_spacing
             pdf.setStrokeColor(current_bg_color)  # Use company color for border
-            pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
+            if width > 0:
+                print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
+                pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
 
-            pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
-            pdf.setFont("Helvetica-Bold", 11)
-            draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
+                pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
+                pdf.setFont("Helvetica-Bold", 11)
+
+                print(1,current_company)
+                draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
 
             # Start a new row
             x = margin + 9
@@ -1158,6 +1169,7 @@ def generate_poster_pdf(request):
 
         pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
         pdf.setFont("Helvetica-Bold", 11)
+        print(2,current_company)
         draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
 
     pdf.showPage()
@@ -1705,15 +1717,12 @@ from django.shortcuts import redirect
 def logout_view(request):
     logout(request)
     return redirect('login')  # Redirect to the login page after logout
-
+from django.contrib import messages
 from django.contrib.auth.views import PasswordResetConfirmView
-from django.shortcuts import redirect
 
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-    def get(self, request, *args, **kwargs):
-        print(f"✅ Received reset request for: {kwargs}")  # Debug
-        return super().get(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        return redirect('password_reset_complete')  # Force redirection
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return super().form_invalid(form)

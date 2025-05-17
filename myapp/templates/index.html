@@ -63,20 +63,53 @@
                         <i class="fas fa-save"></i> Save Poster
                     </button>
                      <a class="btn btn-secondary btn-lg btn-glow" href="{% url 'download_poster' %}">click here to download the poster</a>
-                </div>
+                     {% if has_poster %} <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deletePosterModal">
+                        🗑️ Delete Poster
+                    </button>  {% endif %}  
+                    </div>
             </form>
         </div>
- 
+    
+            <!-- Poster Deletion Button -->
+            
+                
+           
+        
+            <!-- Delete Poster Confirmation Modal -->
+            <div class="modal fade" id="deletePosterModal" tabindex="-1" aria-labelledby="deletePosterModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="deletePosterModalLabel">Confirm Poster Deletion</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete the poster associated with your college? This action cannot be undone.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form method="POST" action="{% url 'delete_poster' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Yes, Delete Poster</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+   
         <!-- Right: PDF Preview Section (Fixed) -->
         <div class="col-lg-6 d-flex align-items-center justify-content-center bg-light p-4 preview-container">
             <div class="card shadow-lg w-100 h-100">
                 <h5 class="text-primary fw-bold p-3">Poster Preview</h5>
-                <iframe id="poster-preview" class="pdf-iframe w-100 h-100" 
+                {% if has_poster %} <iframe id="poster-preview" class="pdf-iframe w-100 h-100" 
                         src="{% url 'download_poster' %}" 
                         frameborder="0">
                 </iframe>
+                {% else %}
+                 <h3> No Posters Available</h3>
             </div>
         </div>
+    {% endif %}    
     </div>
 </div>
 {% endif %}

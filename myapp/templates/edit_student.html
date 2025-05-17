@@ -21,8 +21,10 @@
             <!-- 🌿 Current Photo Display -->
             <label class="form-label">Current Photo</label>
             <br>
+            {% if student.photo %}
             <img id="studentPhoto" src="{{ student.photo.url }}" class="rounded-circle" width="150" height="150" alt="Student Photo">
             <br>
+            {% endif %}
             <button type="button" id="editPhotoBtn" class="btn btn-warning mt-2">Edit Photo</button>
             <button type="button" id="uploadNewPhotoBtn" class="btn btn-primary mt-2">Upload New Photo</button>
         </div>

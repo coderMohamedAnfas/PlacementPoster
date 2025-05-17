@@ -10,6 +10,14 @@
         <button type="submit" class="btn btn-success">Search</button>
     </form>
 
+   <!-- 🌿 Delete All Students Button -->
+<div class="d-flex justify-content-end mb-4">
+    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
+        <i class="bi bi-trash3-fill"></i> Delete All Students
+    </button>
+</div>
+
+
     <!-- 🌿 Student List Table -->
     <table class="table table-hover">
         <thead>
@@ -28,8 +36,13 @@
             <tr>
                 <td><input type="checkbox" name="student_ids" value="{{ student.id }}"></td>
                 <td>
-                    <img src="{{ student.photo.url }}" class="rounded-circle" width="50" height="50" alt="Photo">
+                    {% if student.photo and student.photo.url %}
+                        <img src="{{ student.photo.url }}" class="rounded-circle" width="50" height="50" alt="Photo">
+                    {% else %}
+                        <img src="D:\MYCOLLEGEPROJECT\mysite\media\student_photos\_photo.jpg" class="rounded-circle" width="50" height="50" alt="Default Photo">
+                    {% endif %}
                 </td>
+                
                 <td>{{ student.prn }}</td>
                 <td>{{ student.name }}</td>
                 <td>{{ student.department }}</td>
@@ -44,9 +57,35 @@
                     <a href="{% url 'edit_student' student.id %}" class="btn btn-sm btn-info">Edit</a>
                 </td>
             </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center text-muted">No students found.</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- 🌿 Delete All Confirmation Modal -->
+    <div class="modal fade" id="deleteAllModal" tabindex="-1" aria-labelledby="deleteAllModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteAllModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete <strong>all students</strong> and their associated photos? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="{% url 'delete_all_students' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Yes, Delete All</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 🌿 Pagination Controls -->
     <nav aria-label="Page navigation">

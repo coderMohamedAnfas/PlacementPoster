@@ -23,7 +23,8 @@ def index(request):
     # college = College.objects.filter(request.user)  # Assuming `user` is linked to a college
     is_have_sheet = bool( request.user.sheet_url)
     college = College.objects.get(email=request.user.email)
-    return render(request, 'index.html',{"is_have_sheet": not is_have_sheet,'name':request.user.name.upper(),'college':college})
+    has_poster = Poster.objects.filter(college=college).exists()
+    return render(request, 'index.html',{"is_have_sheet": not is_have_sheet,'name':request.user.name.upper(),'college':college,'has_poster':has_poster})
 
 
 
@@ -592,6 +593,28 @@ def student_list(request):
 
 
 
+def delete_all_students(request):
+    if request.method == "POST" and request.user.is_authenticated:
+        # Get the logged-in college
+        college = request.user
+        
+        # Delete all students and their photos for the logged-in college
+        students = Student.objects.filter(college=college)
+        for student in students:
+            if student.photo and student.photo.path:
+                student.photo.delete(save=False)  # Delete the photo file
+            student.delete()  # Delete the student record
+        
+        # Clear the sheet URL for the logged-in college
+        college.sheet_url = None  # Corrected this line
+        college.save()  # Save the change
+
+        messages.success(request, "All students and their photos have been deleted successfully.")
+        return redirect('student_list')
+
+    return redirect('student_list')
+
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -704,6 +727,11 @@ from reportlab.pdfgen.pathobject import PDFPathObject as Path  # Import Path for
 import math
 from reportlab.lib.colors import HexColor, Color
 from reportlab.pdfgen import canvas
+
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
+# Register the cursive font (replace the path with the actual location of the .ttf file)
+pdfmetrics.registerFont(TTFont('GB', r'D:\MYCOLLEGEPROJECT\mysite\myapp\static\GreatVibes-Regular.ttf'))
 
 
 def draw_college_name(pdf, college_name, x, y, max_width):
@@ -947,33 +975,7 @@ def generate_poster_pdf(request):
     poster_data = poster.data  # JSON field containing company and PRN data
     college_name = request.user.name
 
-    page_background_styles = {
-        'diagonal_lines': {
-            'base_color': HexColor("#f0f0f0"),
-            'pattern_color': HexColor("#e0e0e0"),
-            'pattern_type': 'diagonal_lines'
-        },
-        'dots': {
-            'base_color': HexColor("#f5f5f5"),
-            'pattern_color': HexColor("#e5e5e5"),
-            'pattern_type': 'dots'
-        },
-        'grid': {
-            'base_color': HexColor("#ffffff"),
-            'pattern_color': HexColor("#f0f0f0"),
-            'pattern_type': 'grid'
-        },
-        'waves': {
-            'base_color': HexColor("#f8f8f8"),
-            'pattern_color': HexColor("#e8e8f8"),
-            'pattern_type': 'waves'
-        },
-        'gradient': {
-            'base_color': HexColor("#ffffff"),
-            'pattern_color': HexColor("#f0f0f0"),
-            'pattern_type': 'gradient'
-        }
-    }
+    
     # PDF configuration
     page_width, page_height = A4
     margin = 30
@@ -985,7 +987,7 @@ def generate_poster_pdf(request):
 
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
-    draw_gradient_background(pdf, page_width, page_height)
+    # draw_gradient_background(pdf, page_width, page_height)
     pdf.setTitle(college_name)
     # pdf.setPageCompression(True)
     # Background color (Light Grey)
@@ -1000,11 +1002,8 @@ def generate_poster_pdf(request):
         college_logo = None
 
     def draw_header_footer():
-
-        background_style = page_background_styles["waves"]
-
         # Draw full-page background pattern before other elements
-        draw_full_page_background_pattern(pdf, page_width, page_height, background_style)
+        # draw_full_page_background_pattern(pdf, page_width, page_height, background_style)
         """ Draws header and footer on each page """
         pdf.setFillColor(HexColor("#a47723"))  # Navy blue
         pdf.rect(0, page_height - 93, page_width, 180, fill=1, stroke=0)
@@ -1023,11 +1022,16 @@ def generate_poster_pdf(request):
         draw_college_name(pdf, college_name, page_width / 2, page_height - 80, max_width=page_width-170)
         # pdf.drawCentredString(page_width / 2, page_height - 80, college_name.upper())
         pdf.line(110, page_height - 93, page_width - 33, page_height - 93)
-        pdf.line(30, page_height - 130, page_width - 30, page_height - 130)
-
         pdf.setFillColorRGB(0, 0, 0.15)  # Deep Navy
         pdf.setFont("Helvetica-Bold", 16)
-        pdf.drawCentredString(page_width / 2, page_height - 150, f"CAMPUS PLACEMENT {cd.start_year.year} - {cd.end_year.year}")
+        pdf.drawCentredString(page_width / 2, page_height - 113, f"CAMPUS PLACEMENT {cd.start_year.year} - {cd.end_year.year}")
+        # pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
+        pdf.line(30, page_height - 123, page_width - 30, page_height - 123)
+
+        
+        pdf.setFillColorRGB(244, 0, 0.15)
+        pdf.setFont("GB", 23)
+        pdf.drawCentredString(page_width / 2, page_height - 147, f"Congratulations On Your Placement")
         pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
 
         if college_logo:
@@ -1250,7 +1254,7 @@ def generate_poster_pdf_for_zip(poster):
 
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
-    draw_gradient_background(pdf, page_width, page_height)
+    # draw_gradient_background(pdf, page_width, page_height)
     pdf.setTitle(college_name)
 
     # Background color (Light Grey)
@@ -1265,11 +1269,8 @@ def generate_poster_pdf_for_zip(poster):
         college_logo = None
 
     def draw_header_footer():
-
-        background_style = page_background_styles["waves"]
-
         # Draw full-page background pattern before other elements
-        draw_full_page_background_pattern(pdf, page_width, page_height, background_style)
+        # draw_full_page_background_pattern(pdf, page_width, page_height, background_style)
         """ Draws header and footer on each page """
         pdf.setFillColor(HexColor("#a47723"))  # Navy blue
         pdf.rect(0, page_height - 93, page_width, 180, fill=1, stroke=0)
@@ -1285,17 +1286,23 @@ def generate_poster_pdf_for_zip(poster):
         pdf.line(30, page_height - 55, page_width - 30, page_height - 55)
 
         pdf.setFont("Helvetica-Bold", 18)
-        pdf.drawCentredString(page_width / 2, page_height - 80, college_name.upper())
+        draw_college_name(pdf, college_name, page_width / 2, page_height - 80, max_width=page_width-170)
+        # pdf.drawCentredString(page_width / 2, page_height - 80, college_name.upper())
         pdf.line(110, page_height - 93, page_width - 33, page_height - 93)
-        pdf.line(30, page_height - 130, page_width - 30, page_height - 130)
-
         pdf.setFillColorRGB(0, 0, 0.15)  # Deep Navy
         pdf.setFont("Helvetica-Bold", 16)
-        pdf.drawCentredString(page_width / 2, page_height - 150, f"CAMPUS PLACEMENT {cd.start_year.year} - {cd.end_year.year}")
+        pdf.drawCentredString(page_width / 2, page_height - 113, f"CAMPUS PLACEMENT {cd.start_year.year} - {cd.end_year.year}")
+        # pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
+        pdf.line(30, page_height - 123, page_width - 30, page_height - 123)
+
+        
+        pdf.setFillColorRGB(244, 0, 0.15)
+        pdf.setFont("GB", 23)
+        pdf.drawCentredString(page_width / 2, page_height - 147, f"Congratulations On Your Placement")
         pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
 
         if college_logo:
-            pdf.drawImage(college_logo, 30, page_height - 75, width=60, height=60, mask='auto')
+            pdf.drawImage(college_logo, 20, page_height - 75, width=60, height=60, mask='auto')
 
     x, y = margin + 9, page_height - 280
     draw_header_footer()
@@ -1348,8 +1355,10 @@ def generate_poster_pdf_for_zip(poster):
                 pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
 
                 # Display company name above the group
-                pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
+                pdf.setFillColor(HexColor("#333333"))  
                 pdf.setFont("Helvetica-Bold", 11)
+                print(current_company)
+                print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
                 draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
 
             # Reset values for the new company
@@ -1365,11 +1374,15 @@ def generate_poster_pdf_for_zip(poster):
             # Draw the border for the previous row's company
             width = (students_in_current_row * (image_size + student_spacing)) - student_spacing
             pdf.setStrokeColor(current_bg_color)  # Use company color for border
-            pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
+            if width > 0:
+                print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
+                pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
 
-            pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
-            pdf.setFont("Helvetica-Bold", 11)
-            draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
+                pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
+                pdf.setFont("Helvetica-Bold", 11)
+
+                print(1,current_company)
+                draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
 
             # Start a new row
             x = margin + 9
@@ -1426,8 +1439,10 @@ def generate_poster_pdf_for_zip(poster):
 
         pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
         pdf.setFont("Helvetica-Bold", 11)
+        print(2,current_company)
         draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
 
+  
     pdf.showPage()
     pdf.save()
     buffer.seek(0)
@@ -1529,11 +1544,8 @@ def download_individual_poster(request, poster_id):
         college_logo = None
 
     def draw_header_footer():
-
-        background_style = page_background_styles["waves"]
-
         # Draw full-page background pattern before other elements
-        draw_full_page_background_pattern(pdf, page_width, page_height, background_style)
+        # draw_full_page_background_pattern(pdf, page_width, page_height, background_style)
         """ Draws header and footer on each page """
         pdf.setFillColor(HexColor("#a47723"))  # Navy blue
         pdf.rect(0, page_height - 93, page_width, 180, fill=1, stroke=0)
@@ -1549,17 +1561,23 @@ def download_individual_poster(request, poster_id):
         pdf.line(30, page_height - 55, page_width - 30, page_height - 55)
 
         pdf.setFont("Helvetica-Bold", 18)
-        pdf.drawCentredString(page_width / 2, page_height - 80, college_name.upper())
+        draw_college_name(pdf, college_name, page_width / 2, page_height - 80, max_width=page_width-170)
+        # pdf.drawCentredString(page_width / 2, page_height - 80, college_name.upper())
         pdf.line(110, page_height - 93, page_width - 33, page_height - 93)
-        pdf.line(30, page_height - 130, page_width - 30, page_height - 130)
-
         pdf.setFillColorRGB(0, 0, 0.15)  # Deep Navy
         pdf.setFont("Helvetica-Bold", 16)
-        pdf.drawCentredString(page_width / 2, page_height - 150, f"CAMPUS PLACEMENT {cd.start_year.year} - {cd.end_year.year}")
+        pdf.drawCentredString(page_width / 2, page_height - 113, f"CAMPUS PLACEMENT {cd.start_year.year} - {cd.end_year.year}")
+        # pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
+        pdf.line(30, page_height - 123, page_width - 30, page_height - 123)
+
+        
+        pdf.setFillColorRGB(244, 0, 0.15)
+        pdf.setFont("GB", 23)
+        pdf.drawCentredString(page_width / 2, page_height - 147, f"Congratulations On Your Placement")
         pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
 
         if college_logo:
-            pdf.drawImage(college_logo, 30, page_height - 75, width=60, height=60, mask='auto')
+            pdf.drawImage(college_logo, 20, page_height - 75, width=60, height=60, mask='auto')
 
     x, y = margin + 9, page_height - 280
     draw_header_footer()
@@ -1573,6 +1591,7 @@ def download_individual_poster(request, poster_id):
         company_name = entry.get('company', 'Unknown Company')
         prn = entry.get('prn')
         if not prn:
+            messages.error(request,f"No Student With PRN {prn}")
             continue
 
         # Assign index to company if not already assigned
@@ -1612,8 +1631,10 @@ def download_individual_poster(request, poster_id):
                 pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
 
                 # Display company name above the group
-                pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
+                pdf.setFillColor(HexColor("#333333"))  
                 pdf.setFont("Helvetica-Bold", 11)
+                print(current_company)
+                print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
                 draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
 
             # Reset values for the new company
@@ -1629,11 +1650,15 @@ def download_individual_poster(request, poster_id):
             # Draw the border for the previous row's company
             width = (students_in_current_row * (image_size + student_spacing)) - student_spacing
             pdf.setStrokeColor(current_bg_color)  # Use company color for border
-            pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
+            if width > 0:
+                print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
+                pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
 
-            pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
-            pdf.setFont("Helvetica-Bold", 11)
-            draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
+                pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
+                pdf.setFont("Helvetica-Bold", 11)
+
+                print(1,current_company)
+                draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
 
             # Start a new row
             x = margin + 9
@@ -1690,9 +1715,10 @@ def download_individual_poster(request, poster_id):
 
         pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
         pdf.setFont("Helvetica-Bold", 11)
+        print(2,current_company)
         draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
 
-   
+    
     pdf.showPage()
     pdf.save()
     buffer.seek(0)
@@ -1726,3 +1752,16 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
             for error in errors:
                 messages.error(self.request, error)
         return super().form_invalid(form)
+
+
+def delete_poster(request):
+    if request.method == "POST" and request.user.is_authenticated:
+        college = request.user
+        
+        # Delete the poster for the current college
+        Poster.objects.filter(college=college).delete()
+        
+        messages.success(request, "Your poster has been deleted successfully.")
+        return redirect('index')
+    
+    return redirect('index')

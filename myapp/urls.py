@@ -40,6 +40,9 @@ path('students/', views.student_list, name='student_list'),
     path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='password_reset_done.html'), name='password_reset_done'),
    path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
+ path('delete-all-students/', views.delete_all_students, name='delete_all_students'),
+    path('delete-poster/', views.delete_poster, name='delete_poster'),
+
 ]
 
 

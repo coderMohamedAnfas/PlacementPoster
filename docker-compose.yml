@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres-container
+    environment:
+      POSTGRES_USER: django_user
+      POSTGRES_PASSWORD: django_password
+      POSTGRES_DB: django_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: placement-poster-container
+    image: placement-poster
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    environment:
+      DEBUG: "1"
+      DJANGO_DB_NAME: django_db
+      DJANGO_DB_USER: django_user
+      DJANGO_DB_PASSWORD: django_password
+      DJANGO_DB_HOST: postgres
+      DJANGO_DB_PORT: 5432

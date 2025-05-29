@@ -31,11 +31,11 @@ def index(request):
 
 
 # Google API Setup
-SERVICE_ACCOUNT_FILE = r"D:\MYCOLLEGEPROJECT\myproject\myapp\exemplary-oath-443817-r8-70c8f3318d19.json"
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-drive_service = build("drive", "v3", credentials=creds)
-client = gspread.authorize(creds)
+# SERVICE_ACCOUNT_FILE = r"D:\MYCOLLEGEPROJECT\myproject\myapp\exemplary-oath-443817-r8-70c8f3318d19.json"
+# SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+# creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+# drive_service = build("drive", "v3", credentials=creds)
+# client = gspread.authorize(creds)
 
 # Global Progress Variable
 progress_data = {'progress': 0}
@@ -731,7 +731,7 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 # Register the cursive font (replace the path with the actual location of the .ttf file)
-pdfmetrics.registerFont(TTFont('GB', r'D:\MYCOLLEGEPROJECT\mysite\myapp\static\GreatVibes-Regular.ttf'))
+# pdfmetrics.registerFont(TTFont('GB', r'D:\MYCOLLEGEPROJECT\mysite\myapp\static\GreatVibes-Regular.ttf'))
 
 
 def draw_college_name(pdf, college_name, x, y, max_width):

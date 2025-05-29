@@ -4,6 +4,9 @@ CONTAINER_NAME=placement-poster-container
 PORT=8000
 DOCKER_COMPOSE=$(shell command -v docker-compose >/dev/null 2>&1 && echo "docker-compose" || echo "docker compose")
 
+init: build up logs ## For Initial run of the project, can be used for debugging also
+
+
 build: ## Build the Docker image
 	docker build -t $(IMAGE_NAME) .
 

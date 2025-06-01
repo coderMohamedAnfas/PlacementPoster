@@ -1,0 +1,41 @@
+# This file is used only on production
+version: '3.9'
+
+networks:
+  erada_network:
+    name: erada_network
+
+services:
+  placementpostgres:
+    image: postgres:13
+    container_name: placement-postgres-container
+    environment:
+      POSTGRES_USER: django_user
+      POSTGRES_PASSWORD: aiB9eihoh0wae8
+      POSTGRES_DB: placement_main
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - erada_network
+
+  django:
+    container_name: placement-poster-app-container
+    image: sudevank/placement
+    command: python manage.py runserver 0.0.0.0:8000 # TODO replace with gunicorn
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - placementpostgres
+    environment:
+      DEBUG: "1"
+      DJANGO_DB_NAME: placement_main
+      DJANGO_DB_USER: django_user
+      DJANGO_DB_PASSWORD: aiB9eihoh0wae8
+      DJANGO_DB_HOST: placementpostgres
+      DJANGO_DB_PORT: 5432
+    networks:
+      - erada_network

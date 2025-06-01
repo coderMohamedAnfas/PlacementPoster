@@ -20,5 +20,19 @@ An official repo for placement poster
 	# Make sure you have installed all the components mentioned in the prerequisites
 ```
 
+### Deployment
+To do a deployment on any machine with docker installed
+``` bash
+	# Clone the repo
+	git clone https://github.com/sudevan/PlacementPoster.git
+
+	cd PlacementPoster
+
+	# Cloning, please execute this command
+	make deploy
+
+	# Make sure you have installed all the components mentioned in the prerequisites
+```
+
 ### Contributing 
 Please contact the developer for further details

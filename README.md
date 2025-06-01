@@ -14,6 +14,9 @@ An official repo for placement poster
 	# Cloning, please execute this command
 	make init
 
+	# To publish the changes to dockerhub
+	make publish
+
 	## For further clarification run
 	make help
 
@@ -23,6 +26,7 @@ An official repo for placement poster
 ### Deployment
 To do a deployment on any machine with docker installed
 ``` bash
+
 	# Clone the repo
 	git clone https://github.com/sudevan/PlacementPoster.git
 

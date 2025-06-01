@@ -19,7 +19,7 @@ services:
     networks:
       - erada_network
 
-  django:
+  placementdjango:
     container_name: placement-poster-app-container
     image: sudevank/placement
     ports:

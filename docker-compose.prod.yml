@@ -1,6 +1,4 @@
 # This file is used only on production
-version: '3.9'
-
 networks:
   erada_network:
     name: erada_network

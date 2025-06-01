@@ -33,14 +33,14 @@ publish: ## To publish the current application to the docker hub
 	docker tag ${IMAGE_NAME} ${PRODUCTION_IMAGE}
 	docker push ${PRODUCTION_IMAGE}
 
-deploy: down ## To deploy the application on production
+deploy: ## To deploy the application on production
 	# Fetch the latest from git
 	git pull
 
 	# Fetching the latest changes
 	$(DOCKER_COMPOSE) -f docker-compose.prod.yml pull
 
-	# Start the application
+	# Patching & Restarting the application
 	$(DOCKER_COMPOSE) -f docker-compose.prod.yml up -d
 
 .PHONY: help build restart up down logs shell clean publish deploy.prod

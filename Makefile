@@ -29,7 +29,7 @@ clean: ## Clean up Docker (remove image and container)
 	docker rm -f $(CONTAINER_NAME) || true
 	docker rmi $(IMAGE_NAME) || true
 
-publish: ## To publish the current application to the docker hub
+publish: build ## To publish the current application to the docker hub
 	docker tag ${IMAGE_NAME} ${PRODUCTION_IMAGE}
 	docker push ${PRODUCTION_IMAGE}
 

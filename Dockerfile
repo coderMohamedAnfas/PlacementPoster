@@ -1,5 +1,5 @@
 # Use the official Python image as the base image
-FROM python:3.12-slim
+FROM python:3.8.10-alpine
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -7,10 +7,12 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory
 WORKDIR /app
 
+
 # Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk update \
+    && apk --update --upgrade add gcc musl-dev zlib-dev libffi-dev cmake \
+    && apk add postgresql-dev \
+    && pip install --upgrade pip setuptools wheel 
 
 # Install Python dependencies
 COPY requirements.txt /app/

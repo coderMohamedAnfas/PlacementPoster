@@ -6,7 +6,7 @@ networks:
 
 services:
   placementpostgres:
-    image: postgres:13
+    image: postgres:12-bullseye
     container_name: placement-postgres-container
     environment:
       POSTGRES_USER: django_user
@@ -22,9 +22,6 @@ services:
   django:
     container_name: placement-poster-app-container
     image: sudevank/placement
-    command: python manage.py runserver 0.0.0.0:8000 # TODO replace with gunicorn
-    volumes:
-      - .:/app
     ports:
       - "8004:8000"
     depends_on:

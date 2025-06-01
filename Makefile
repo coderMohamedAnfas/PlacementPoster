@@ -33,7 +33,7 @@ publish: build ## To publish the current application to the docker hub
 	docker tag ${IMAGE_NAME} ${PRODUCTION_IMAGE}
 	docker push ${PRODUCTION_IMAGE}
 
-deploy: ## To deploy the application on production
+deploy: down ## To deploy the application on production
 	# Fetch the latest from git
 	git pull
 

@@ -14,7 +14,9 @@ An official repo for placement poster
 	# Cloning, please execute this command
 	make init
 
-	# To publish the changes to dockerhub
+	# To publish the changes to dockerhub.
+	# Before publishing the changes to dockerhub, make sure you have the repo access
+	# For repo access contact @sudevank
 	make publish
 
 	## For further clarification run

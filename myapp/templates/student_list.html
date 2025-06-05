@@ -4,26 +4,36 @@
 <div class="container mt-4">
     <h2 class="text-center mb-4">🎓 Manage Students</h2>
 
+    <!-- ✅ Alerts -->
+    {% if messages %}
+    <div class="container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- 🌿 Search & Bulk Action -->
     <form method="GET" class="mb-3 d-flex">
         <input type="text" name="q" class="form-control me-2" placeholder="Search by Name or PRN" value="{{ request.GET.q }}">
         <button type="submit" class="btn btn-success">Search</button>
     </form>
 
-   <!-- 🌿 Delete All Students Button -->
-<div class="d-flex justify-content-end mb-4">
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
-        <i class="bi bi-trash3-fill"></i> Delete All Students
-    </button>
-</div>
-
+    <!-- 🌿 Delete All Students Button -->
+    <div class="d-flex justify-content-end mb-4">
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
+            <i class="bi bi-trash3-fill"></i> Delete All Students
+        </button>
+    </div>
 
     <!-- 🌿 Student List Table -->
     <table class="table table-hover">
         <thead>
             <tr>
                 <th><input type="checkbox" id="selectAll"></th>
-                <th>Photo</th>
                 <th>PRN</th>
                 <th>Name</th>
                 <th>Department</th>
@@ -35,14 +45,6 @@
             {% for student in students %}
             <tr>
                 <td><input type="checkbox" name="student_ids" value="{{ student.id }}"></td>
-                <td>
-                    {% if student.photo and student.photo.url %}
-                        <img src="{{ student.photo.url }}" class="rounded-circle" width="50" height="50" alt="Photo">
-                    {% else %}
-                        <img src="D:\MYCOLLEGEPROJECT\mysite\media\student_photos\_photo.jpg" class="rounded-circle" width="50" height="50" alt="Default Photo">
-                    {% endif %}
-                </td>
-                
                 <td>{{ student.prn }}</td>
                 <td>{{ student.name }}</td>
                 <td>{{ student.department }}</td>
@@ -59,7 +61,39 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" class="text-center text-muted">No students found.</td>
+                <td colspan="6" class="text-center text-muted">
+                    No students found.<br><br>
+
+                    <!-- 🌟 Tabs for Import Options -->
+                    <ul class="nav nav-tabs justify-content-center" id="importTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="sheet-tab" data-bs-toggle="tab" data-bs-target="#sheet" type="button" role="tab">Google Sheet</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="excel-tab" data-bs-toggle="tab" data-bs-target="#excel" type="button" role="tab">Excel Upload</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mt-3">
+                        <!-- Google Sheet Import Form -->
+                        <div class="tab-pane fade show active" id="sheet" role="tabpanel">
+                            <form method="POST" action="{% url 'sheet_url_upload' %}" class="d-flex justify-content-center align-items-center gap-2">
+                                {% csrf_token %}
+                                <input type="url" name="sheet_url" class="form-control w-50" placeholder="Enter Google Sheet URL" required>
+                                <button type="submit" class="btn btn-primary">Import from Sheet</button>
+                            </form>
+                        </div>
+
+                        <!-- Excel File Upload Form -->
+                        <div class="tab-pane fade" id="excel" role="tabpanel">
+                            <form method="POST" action="{% url 'upload_excel' %}" enctype="multipart/form-data" class="d-flex justify-content-center align-items-center gap-2 mt-3">
+                                {% csrf_token %}
+                                <input type="file" name="excel_file" accept=".xlsx" class="form-control w-50" required>
+                                <button type="submit" class="btn btn-warning">Upload Excel File</button>
+                            </form>
+                        </div>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -121,12 +155,11 @@
             {% endif %}
         </ul>
     </nav>
-
 </div>
 
 <script>
     // Select/Deselect All
-    document.getElementById('selectAll').addEventListener('change', function() {
+    document.getElementById('selectAll').addEventListener('change', function () {
         let checkboxes = document.querySelectorAll('input[name="student_ids"]');
         checkboxes.forEach(checkbox => {
             checkbox.checked = this.checked;

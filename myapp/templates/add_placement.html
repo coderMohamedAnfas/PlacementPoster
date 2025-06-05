@@ -1,0 +1,29 @@
+{% extends "page.html" %}
+
+{% block content %}
+<body class="p-4">
+
+<div class="container" style="max-width: 500px;">
+    <h3>Add Student Placement</h3>
+    <form method="POST" action="{% url 'add_placement' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="prn" class="form-label">Student PRN</label>
+            <input type="text" class="form-control" id="prn" name="prn" placeholder="Enter Student PRN" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="company" class="form-label">Select Company</label>
+            <select class="form-select" id="company" name="company_id" required>
+                <option value="" disabled selected>Select a company</option>
+                {% for company in companies %}
+                <option value="{{ company.id }}">{{ company.name }} (LPA: {{ company.lpa }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Add Placement</button>
+    </form>
+</div>
+
+{% endblock %}

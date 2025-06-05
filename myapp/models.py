@@ -69,6 +69,8 @@ class Student(models.Model):
     name = models.CharField(max_length=255)
     prn = models.CharField(max_length=20, unique=True)
     department = models.CharField(max_length=100)
+    photo_url = models.URLField(null=True, blank=True)  # URL for the photo if needed
+    is_photo = models.BooleanField(default=False)
     photo = models.ImageField(upload_to='student_photos/', blank=True, null=True)
     
 
@@ -101,13 +103,24 @@ class CommonData(models.Model):
         super().save(*args, **kwargs)
 
     
+class Company(models.Model):
+    name = models.CharField(max_length=50,null=True)
+    lpa = models.DecimalField(max_digits=5, decimal_places=2)  # Adjust max_digits as needed
 
-class Poster(models.Model):
+
+class PlacementData(models.Model):
     college = models.ForeignKey(College, on_delete=models.CASCADE)
-    data = models.JSONField(null=True)  # Store dynamic companies and PRNs
-    created_at = models.DateTimeField(auto_now_add=True)
+    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True)
+
+
+
+# class Poster(models.Model):
+#     college = models.ForeignKey(College, on_delete=models.CASCADE)
+#     # data = models.JSONField(null=True)  # Store dynamic companies and PRNs
+#     created_at = models.DateTimeField(auto_now_add=True)
     
-    def __str__(self):
-        return f"Poster for {self.college.name}"
+    # def __str__(self):
+    #     return f"Poster for {self.college.name}"
 
 

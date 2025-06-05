@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apk update \
-    && apk --update --upgrade add gcc musl-dev zlib-dev libffi-dev cmake \
+    && apk --update --upgrade add gcc musl-dev zlib-dev libffi-dev cmake tzdata\
     && apk add postgresql-dev \
     && pip install --upgrade pip setuptools wheel 
 

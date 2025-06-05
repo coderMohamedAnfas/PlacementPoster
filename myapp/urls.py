@@ -11,11 +11,15 @@ urlpatterns = [
     path('poster/download/',views.generate_poster_pdf, name='download_poster'),
 
 
-# 
+
+    path('import-sheet/', views.sheet_url_upload, name='sheet_url_upload'),
+   path('upload-excel/', views.upload_excel, name='upload_excel'),
+
+
     path('upload-sheet-url/',views.sheet_url_upload,name="sheet_url_upload"),
     path('admin-panel/',views.admin_panel,name="admin_dash"),
   path("clear-students/", views.clear_students_view, name="clear_students"),
-path('download-posters/', views.download_posters_page, name='download_posters'),
+# path('download-posters/', views.download_posters_page, name='download_posters'),
 
 path('send-sheet-link/', views.send_email, name='sheet_link'),
     path('validate-prn/', views.validate_prn, name='validate_prn'),
@@ -23,8 +27,8 @@ path('send-sheet-link/', views.send_email, name='sheet_link'),
 path('common-data/', views.manage_common_data, name='common_data'),
 
     #  path('download-posters/', views.download_posters_page, name='download_posters'),
-    path('download-poster/<int:poster_id>/', views.download_individual_poster, name='download_individual_poster'),
-    path('download-all-posters/', views.download_all_posters_zip, name='download_bulk_posters'),
+    # path('download-poster/<int:poster_id>/', views.download_individual_poster, name='download_individual_poster'),
+    # path('download-all-posters/', views.download_all_posters_zip, name='download_bulk_posters'),
 path('delete-college/<int:college_id>/', views.delete_college, name='delete_college'),
  path('create-college/', views.create_college, name='create_college'),
   path('edit/<int:college_id>/', views.edit_college, name='edit_college'),
@@ -43,6 +47,14 @@ path('students/', views.student_list, name='student_list'),
  path('delete-all-students/', views.delete_all_students, name='delete_all_students'),
     path('delete-poster/', views.delete_poster, name='delete_poster'),
 
+  path('companies/', views.company_list_view, name='company_list'),
+    path('add-company/', views.add_company_post, name='add_company_post'),
+    # path('download-placements/', views.download_excel, name='download_excel'),s
+
+    path('CollegeWiseCompanies/', views.company_students_view, name='company_students'),
+    path('companies/<int:company_id>/students/', views.get_students_for_company, name='get_students_for_company'),
+    path('students/<int:student_id>/download-photo/', views.download_student_photo, name='download_student_photo'),
+ path("add_placement_view/",views.add_placement_view,name="add_placement")
 ]
 
 

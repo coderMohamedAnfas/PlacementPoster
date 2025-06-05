@@ -1,0 +1,149 @@
+{% extends "page.html" %}
+
+{% block content %}
+<div class="accordion" id="companyAccordion">
+    {% for company in companies %}
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading{{ company.id }}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ company.id }}" aria-expanded="false" aria-controls="collapse{{ company.id }}">
+                {{ company.name }} (LPA: {{ company.lpa }})
+            </button>
+        </h2>
+        <div id="collapse{{ company.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ company.id }}" data-bs-parent="#companyAccordion">
+            <div class="accordion-body">
+                <button class="btn btn-sm btn-info show-students-btn" data-company-id="{{ company.id }}">Show Students</button>
+                <div class="student-list mt-3" id="student-list-{{ company.id }}">
+                    <!-- Students will load here via AJAX -->
+                    <p>Click "Show Students" to load students.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+        <p>No companies found.</p>
+    {% endfor %}
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i=0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+$(document).ready(function() {
+    console.log("Document ready, attaching event handlers.");
+
+    // Click handler for Show Students buttons
+    $('.show-students-btn').on('click', function() {
+        const companyId = $(this).data('company-id');
+        const studentListDiv = $('#student-list-' + companyId);
+
+        console.log(`Show Students clicked for companyId: ${companyId}`);
+
+        // If already loaded, do nothing
+        if (studentListDiv.data('loaded')) {
+            console.log(`Students already loaded for companyId: ${companyId}, skipping AJAX.`);
+            return;
+        }
+
+        // Optional: Open the accordion collapse if not already open
+        const collapseDiv = $('#collapse' + companyId);
+        if (!collapseDiv.hasClass('show')) {
+            collapseDiv.collapse('show');
+        }
+
+        studentListDiv.html('<p>Loading students...</p>');
+
+        $.ajax({
+            url: `http://127.0.0.1:9000/companies/${companyId}/students/`,
+            type: 'GET',
+            success: function(response) {
+                console.log(`Received students for companyId: ${companyId}`, response);
+                const students = response.students;
+                if (students.length === 0) {
+                    studentListDiv.html('<p>No students placed for this company.</p>');
+                } else {
+                    let html = `<table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>PRN</th>
+                                <th>Department</th>
+                                <th>Photo URL</th>
+                                <th>Download Photo</th>
+                            </tr>
+                        </thead><tbody>`;
+
+                    students.forEach(function(student) {
+                        html += `<tr>
+                            <td>${student.name}</td>
+                            <td>${student.prn}</td>
+                            <td>${student.department}</td>
+                            <td><a href="${student.photo_url}" target="_blank">View</a></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary download-photo-btn" data-student-id="${student.id}">
+                                    ${student.has_photo ? 'Downloaded' : 'Download'}
+                                </button>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    studentListDiv.html(html);
+                }
+                studentListDiv.data('loaded', true);
+            },
+            error: function(xhr, status, error) {
+                console.error(`Error loading students for companyId: ${companyId}`, status, error);
+                studentListDiv.html('<p>Error loading students.</p>');
+            }
+        });
+    });
+
+    // Download photo button click (unchanged)
+    $(document).on('click', '.download-photo-btn', function() {
+        const btn = $(this);
+        const studentId = btn.data('student-id');
+
+        console.log(`Download photo clicked for studentId: ${studentId}`);
+
+        btn.prop('disabled', true).text('Downloading...');
+
+        $.ajax({
+            url: `/students/${studentId}/download-photo/`,
+            type: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                console.log(`Download photo response for studentId: ${studentId}`, response);
+                if(response.success) {
+                    btn.text('Downloaded');
+                } else {
+                    btn.text('Failed');
+                    alert(response.message);
+                }
+                btn.prop('disabled', false);
+            },
+            error: function(xhr, status, error) {
+                console.error(`Error during photo download for studentId: ${studentId}`, status, error);
+                alert('Error during photo download.');
+                btn.text('Download');
+                btn.prop('disabled', false);
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

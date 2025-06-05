@@ -23,7 +23,7 @@ logs: ## View logs from the container
 	docker logs -f $(CONTAINER_NAME)
 
 shell: ## Exec on the container
-	docker exec -it $(CONTAINER_NAME) bash
+	docker exec -it $(CONTAINER_NAME) sh
 
 clean: ## Clean up Docker (remove image and container)
 	docker rm -f $(CONTAINER_NAME) || true

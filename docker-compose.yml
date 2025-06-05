@@ -12,6 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+      - ./credentials:/var/lib/credentials/  
 
   django:
     build:
@@ -23,9 +24,11 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
+      - "9000:8000"
     depends_on:
       - postgres
+    tty: true
+    stdin_open: true
     environment:
       DEBUG: "1"
       DJANGO_DB_NAME: django_db

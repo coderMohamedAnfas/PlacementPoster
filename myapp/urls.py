@@ -26,7 +26,7 @@ path('send-sheet-link/', views.send_email, name='sheet_link'),
      path('manage-college/', views.manage_colleges, name='manage_colleges'),
 path('common-data/', views.manage_common_data, name='common_data'),
 
-    #  path('download-posters/', views.download_posters_page, name='download_posters'),
+     path('download-posters/', views.download_posters_page, name='download_posters'),
     # path('download-poster/<int:poster_id>/', views.download_individual_poster, name='download_individual_poster'),
     # path('download-all-posters/', views.download_all_posters_zip, name='download_bulk_posters'),
 path('delete-college/<int:college_id>/', views.delete_college, name='delete_college'),

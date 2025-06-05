@@ -146,6 +146,8 @@ def fetch_google_sheet_data(request, task_id):
 #import pandas as pd
 from django.views.decorators.csrf import csrf_exempt
 
+def download_posters_page(request):
+    pass
 # @login_required
 # @csrf_exempt
 # def upload_excel(request):

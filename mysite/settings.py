@@ -29,7 +29,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["placement.gptcpalakkad.ac.in","*"]
 
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://placement.gptcpalakkad.ac.in",
+]
 # Application definition
 
 INSTALLED_APPS = [

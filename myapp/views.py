@@ -1168,9 +1168,13 @@ def generate_poster_pdf(request):
     pdf.showPage()
     pdf.save()
     buffer.seek(0)
+
     college = College.objects.get(email=request.user.email)
-    if college.pdf:
-        college.pdf.delete(save=False)
+
+    if college.pdf:  # Check if PDF exists
+        college.pdf.delete(save=False)  # Delete file from storage (not from DB)
+        college.pdf = None              # Clear the field in the DB
+        college.save()                  # Persist the change
 
     college.pdf.save(f"{college.name}_placement_poster.pdf", ContentFile(buffer.read()))
     college.save()

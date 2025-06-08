@@ -1181,6 +1181,11 @@ def generate_poster_pdf(request):
     if college.pdf:
         college.pdf.delete(save=False)
 >>>>>>> 7ac6e72 (completion of website)
+=======
+    college = College.objects.get(email=request.user.email)
+    if college.pdf:
+        college.pdf.delete(save=False)
+>>>>>>> 7ac6e72 (completion of website)
 
     college.pdf.save(f"{college.name}_placement_poster.pdf", ContentFile(buffer.read()))
     college.save()

@@ -1169,6 +1169,7 @@ def generate_poster_pdf(request):
     pdf.save()
     buffer.seek(0)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     college = College.objects.get(email=request.user.email)
 
@@ -1176,6 +1177,11 @@ def generate_poster_pdf(request):
         college.pdf.delete(save=False)  # Delete file from storage (not from DB)
         college.pdf = None              # Clear the field in the DB
         college.save()                  # Persist the change
+=======
+    college = College.objects.get(email=request.user.email)
+    if college.pdf:
+        college.pdf.delete(save=False)
+>>>>>>> 7ac6e72 (completion of website)
 =======
     college = College.objects.get(email=request.user.email)
     if college.pdf:

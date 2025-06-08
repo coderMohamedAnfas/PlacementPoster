@@ -45,8 +45,8 @@ class College(AbstractBaseUser, PermissionsMixin):
 
     )
     current_status = models.TextField(blank=True, null=True)
-    
-    # Required fields for AbstractBaseUser
+    pdf = models.FileField(upload_to ='posters/',  blank=True,
+        null=True,)    # Required fields for AbstractBaseUser
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     
@@ -92,10 +92,10 @@ class CommonData(models.Model):
     end_year = models.DateField(blank=True, null=True)  # Calculated field
     header = models.CharField(max_length=255,default="None")
     footer = models.CharField(max_length=255,default="None")
-    prn_field = models.CharField(max_length=25, blank=True)
-    image_field = models.CharField(max_length=25, blank=True)
-    name_field = models.CharField(max_length=25)
-    department_field = models.CharField(max_length=25)
+    prn_field = models.CharField(max_length=255, blank=True)
+    image_field = models.CharField(max_length=255, blank=True)
+    name_field = models.CharField(max_length=255)
+    department_field = models.CharField(max_length=255)
 
     def save(self, *args, **kwargs):
         if self.start_year:
@@ -110,7 +110,9 @@ class Company(models.Model):
 
 class PlacementData(models.Model):
     college = models.ForeignKey(College, on_delete=models.CASCADE)
-    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    # models.py
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True)
 
 

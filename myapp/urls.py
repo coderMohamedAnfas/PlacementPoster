@@ -4,11 +4,11 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
      path('', views.login_view, name='login'),
     path('generate-poster/', views.index, name='index'),  # Home page with the form
-    path('save/',views.generate_poster_json,name='generate_poster'),
+   #  path('save/',views.generate_poster_json,name='generate_poster'),
      path('profile/', views.profile_view, name='profile'),
     # path('poster/<int:poster_id>/download/', views.download_poster, name='download_poster'),
 
-    path('poster/download/',views.generate_poster_pdf, name='download_poster'),
+    path('poster/download/',views.generate_poster_pdf, name='generate_poster'),
 
 
 
@@ -28,6 +28,8 @@ path('common-data/', views.manage_common_data, name='common_data'),
 
      path('download-posters/', views.download_posters_page, name='download_posters'),
     # path('download-poster/<int:poster_id>/', views.download_individual_poster, name='download_individual_poster'),
+      path('download/pdf/<int:college_id>/', views.download_college_pdf, name='download_college_pdf'),
+       path('download/all-college-pdfs/', views.download_all_college_pdfs, name='download_all_college_pdfs'),
     # path('download-all-posters/', views.download_all_posters_zip, name='download_bulk_posters'),
 path('delete-college/<int:college_id>/', views.delete_college, name='delete_college'),
  path('create-college/', views.create_college, name='create_college'),
@@ -48,13 +50,17 @@ path('students/', views.student_list, name='student_list'),
     path('delete-poster/', views.delete_poster, name='delete_poster'),
 
   path('companies/', views.company_list_view, name='company_list'),
-    path('add-company/', views.add_company_post, name='add_company_post'),
+    path('companies/add-company/', views.add_company_post, name='add_company_post'),
+     path('companies/edit/<int:company_id>/', views.edit_company_post, name='edit_company_post'),
+    path('companies/delete/<int:company_id>/', views.delete_company, name='delete_company'),
     # path('download-placements/', views.download_excel, name='download_excel'),s
-
+path('download-poster-pdf/', views.download_placement_pdf, name='download_poster_pdf'),
     path('CollegeWiseCompanies/', views.company_students_view, name='company_students'),
     path('companies/<int:company_id>/students/', views.get_students_for_company, name='get_students_for_company'),
     path('students/<int:student_id>/download-photo/', views.download_student_photo, name='download_student_photo'),
- path("add_placement_view/",views.add_placement_view,name="add_placement")
+ path("add_placement_view/",views.add_placement_view,name="add_placement"),    
+     path('remove_student/', views.remove_student_from_placement, name='remove_student_from_placement'),
+ path('companies/<int:company_id>/add-student/', views.add_student_to_company, name='add_student_to_company'),
 ]
 
 

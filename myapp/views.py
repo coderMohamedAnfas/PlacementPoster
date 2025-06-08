@@ -63,7 +63,7 @@ def sheet_url_upload(request):
             fetch_google_sheet_data(request, task_id)
 
             # return JsonResponse({"task_id": task_id})
-            return JsonResponse({"success": True, "message": "Data fetched successfully!"})
+            return redirect("student_list")
 
         except College.DoesNotExist:
             return JsonResponse({'error': 'College not found.',"success": False}, status=400)
@@ -146,8 +146,7 @@ def fetch_google_sheet_data(request, task_id):
 #import pandas as pd
 from django.views.decorators.csrf import csrf_exempt
 
-def download_posters_page(request):
-    pass
+
 # @login_required
 # @csrf_exempt
 # def upload_excel(request):
@@ -207,80 +206,80 @@ def extract_sheet_id(sheet_url):
 
 
 
-def generate_poster_json(request):
-    if request.method == 'POST':
-        # Extract form data
-        companies = request.POST.getlist('company_name[]')
-        lpas = request.POST.getlist('lpa[]')
+# def generate_poster_json(request):
+#     if request.method == 'POST':
+#         # Extract form data
+#         companies = request.POST.getlist('company_name[]')
+#         lpas = request.POST.getlist('lpa[]')
 
-        # Parse PRNs for each company manually
-        prns_dict = {}
-        for key in request.POST:
-            if key.startswith('prns['):
-                # Extract the company index from the key, e.g., prns[0][] -> 0
-                company_index = key.split('[')[1].split(']')[0]
-                prns_dict[int(company_index)] = request.POST.getlist(key)
+#         # Parse PRNs for each company manually
+#         prns_dict = {}
+#         for key in request.POST:
+#             if key.startswith('prns['):
+#                 # Extract the company index from the key, e.g., prns[0][] -> 0
+#                 company_index = key.split('[')[1].split(']')[0]
+#                 prns_dict[int(company_index)] = request.POST.getlist(key)
 
-        print(f"Companies: {companies}, LPAs: {lpas}, PRNs: {prns_dict}")
+#         print(f"Companies: {companies}, LPAs: {lpas}, PRNs: {prns_dict}")
 
-        # Prepare a list to store students for the poster
-        students_for_poster = []
+#         # Prepare a list to store students for the poster
+#         students_for_poster = []
 
-        # Iterate through each company and corresponding PRNs
-        for index, (company, lpa) in enumerate(zip(companies, lpas)):
-            prns = prns_dict.get(index, [])
-            for prn in prns:
-                try:
-                    # Get the student by PRN
-                    student = Student.objects.get(prn=prn)
+#         # Iterate through each company and corresponding PRNs
+#         for index, (company, lpa) in enumerate(zip(companies, lpas)):
+#             prns = prns_dict.get(index, [])
+#             for prn in prns:
+#                 try:
+#                     # Get the student by PRN
+#                     student = Student.objects.get(prn=prn)
 
-                    # Ensure that the student has a photo associated with them
-                    student_photo = student.photo if student.photo else 'default_photo.jpg'
+#                     # Ensure that the student has a photo associated with them
+#                     student_photo = student.photo if student.photo else 'default_photo.jpg'
 
-                    # Add student data to the list
-                    students_for_poster.append({
-                        "name": student.name,
-                        "company": f"{company} ({lpa} LPA)",
-                        "photo": student.photo.url if student.photo else 'default_photo.jpg',
-                        "prn": student.prn,
-                    })
+#                     # Add student data to the list
+#                     students_for_poster.append({
+#                         "name": student.name,
+#                         "company": f"{company} ({lpa} LPA)",
+#                         "photo": student.photo.url if student.photo else 'default_photo.jpg',
+#                         "prn": student.prn,
+#                     })
 
-                except Student.DoesNotExist:
-                    messages.error(request, f"Student with PRN {prn} not found.")
-                    continue
+#                 except Student.DoesNotExist:
+#                     messages.error(request, f"Student with PRN {prn} not found.")
+#                     continue
 
-        # Get the college associated with the logged-in user
-        college = College.objects.get(email=request.user.email)
+#         # Get the college associated with the logged-in user
+#         college = College.objects.get(email=request.user.email)
 
-        # Get or create the poster for the college
-        poster, created = Poster.objects.get_or_create(college=college)
+#         # Get or create the poster for the college
+#         poster, created = Poster.objects.get_or_create(college=college)
 
-        # Ensure `data` is not None
-        if poster.data is None:
-            poster.data = []
+#         # Ensure `data` is not None
+#         if poster.data is None:
+#             poster.data = []
 
-        # If poster already exists, merge with existing data
-        if not created:
-            # Extract existing PRNs from the poster data
-            existing_prns = {student['prn'] for student in poster.data}
+#         # If poster already exists, merge with existing data
+#         if not created:
+#             # Extract existing PRNs from the poster data
+#             existing_prns = {student['prn'] for student in poster.data}
 
-            # Append only unique students (based on PRN)
-            merged_students = [student for student in students_for_poster if student['prn'] not in existing_prns]
+#             # Append only unique students (based on PRN)
+#             merged_students = [student for student in students_for_poster if student['prn'] not in existing_prns]
 
-            # Update the poster with the merged student list
-            poster.data.extend(merged_students)
-        else:
-            # Assign students_for_poster directly if the poster is newly created
-            poster.data = students_for_poster
+#             # Update the poster with the merged student list
+#             poster.data.extend(merged_students)
+#         else:
+#             # Assign students_for_poster directly if the poster is newly created
+#             poster.data = students_for_poster
 
-        # Save the poster
-        poster.save()
+#         # Save the poster
+#         poster.save()
 
-        # Redirect to a success page or return a JSON response
-        messages.success(request,"Placed students details are saved and ready to download")
-        return redirect('index')
+#         # Redirect to a success page or return a JSON response
+#         messages.success(request,"Placed students details are saved and ready to download")
+#         return redirect('index')
 
-    return render(request, 'index.html')
+#     return render(request, 'index.html')
 
 
 
@@ -290,8 +289,7 @@ from django.contrib import messages
 
 
 def admin_panel(request):
-    colleges = College.objects.all()
-    return render(request,"admin_user/manage_colleges.html")
+    return redirect("manage_colleges")
 
 def login_view(request):
     if request.method == "POST":
@@ -328,7 +326,7 @@ def validate_prn(request):
         valid = Student.objects.filter(prn__iexact=prn).exists()
         
         # Fetch suggestions
-        suggestions = Student.objects.filter(prn__startswith=prn).values_list('prn', flat=True)[:5]
+        suggestions = Student.objects.filter(prn__startswith=prn).values_list('prn', flat=True)[:8]
         print(suggestions)
     return JsonResponse({'valid': valid, 'suggestions': list(suggestions)})
 
@@ -695,8 +693,8 @@ def clear_students_view(request):
 
         # Delete students and posters belonging to the selected colleges
         Student.objects.filter(college__in=colleges).delete()
-        Poster.objects.filter(college__in=colleges).delete()
-
+        # Poster.objects.filter(college__in=colleges).delete()?
+# 
         # Clear sheet_url for selected colleges
         colleges.update(sheet_url=None)
 
@@ -969,9 +967,9 @@ def generate_poster_pdf(request):
     college_name = College.objects.get(email=request.user.email).name
     from collections import defaultdict
     company_to_students = defaultdict(list)
-
+    
     for placement in placements:
-        company_to_students[placement.company.name].append((placement.student, placement.company))
+        company_to_students[placement.company.name + f"  ({str(placement.company.lpa)})"].append((placement.student, placement.company))
 
 
     
@@ -1170,14 +1168,69 @@ def generate_poster_pdf(request):
     pdf.showPage()
     pdf.save()
     buffer.seek(0)
-    response = HttpResponse(buffer, content_type="application/pdf")
-    response["Content-Disposition"] = "inline; filename=placement_poster.pdf"  # Use 'inline' to show in iframe
+    college = College.objects.get(email=request.user.email)
+    if college.pdf:
+        college.pdf.delete(save=False)
+
+    college.pdf.save(f"{college.name}_placement_poster.pdf", ContentFile(buffer.read()))
+    college.save()
+
+    # response = HttpResponse(buffer, content_type="application/pdf")
+    # response["Content-Disposition"] = "inline; filename=placement_poster.pdf"  # Use 'inline' to show in iframe
+    messages.info(request,"Poster Generated Successfully")
+    return redirect("index")
+
+
+from django.core.files.base import ContentFile
+
+def download_posters_page(request):
+    colleges = College.objects.filter(is_superuser=False)
+    return render(request, 'admin_user/download_posters.html', {'colleges': colleges})
+
+import os
+import zipfile
+from io import BytesIO
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from .models import College
+
+@login_required  # optional: restrict access to logged-in users
+def download_all_college_pdfs(request):
+    # Create a BytesIO object to hold the ZIP in memory
+    zip_buffer = BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        colleges = College.objects.exclude(pdf='')  # only those with a PDF
+        for college in colleges:
+            if college.pdf and os.path.isfile(college.pdf.path):
+                file_path = college.pdf.path
+                # Create a zip-friendly filename
+                filename = f"{college.name.replace(' ', '_')}_poster.pdf"
+                zip_file.write(file_path, arcname=filename)
+
+    # Set the pointer to the beginning of the BytesIO buffer
+    zip_buffer.seek(0)
+
+    # Create response with ZIP file
+    response = HttpResponse(zip_buffer, content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="All_Colleges_PDFs.zip"'
     return response
 
-# def download_posters_page(request):
-#     posters = Poster.objects.filter(college__is_superuser=False)
-#     return render(request, 'admin_user/download_posters.html', {'posters': posters})
 
+from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404
+from .models import College
+
+def download_college_pdf(request, college_id):
+    college = get_object_or_404(College, id=college_id)
+
+    if college.pdf and college.pdf.path:
+        try:
+            return FileResponse(open(college.pdf.path, 'rb'), as_attachment=True, filename=f"{college.name}_poster.pdf")
+        except FileNotFoundError:
+            raise Http404("PDF file not found.")
+    else:
+        raise Http404("This college has no PDF uploaded.")
 
 # import zipfile
 # from io import BytesIO
@@ -1722,6 +1775,7 @@ def edit_student(request, pk):
     if request.method == 'POST':
         student.name = request.POST['name']
         student.department = request.POST['department']
+        student.prn = request.POST['prn']
         student.save()
         messages.success(request, 'Student details updated successfully!')
         return redirect('student_list')
@@ -1745,17 +1799,59 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
         return super().form_invalid(form)
 
 
+from django.http import FileResponse, Http404
+from .models import College
+
+def download_placement_pdf(request):
+    if not request.user.is_authenticated:
+        return HttpResponse("Unauthorized", status=401)
+
+    try:
+        college = College.objects.get(email=request.user.email)
+        if not college.pdf:
+            messages.error(request, "No PDF available for download.")
+            return redirect('index')
+        
+        return FileResponse(college.pdf.open('rb'), as_attachment=True, filename='placement_poster.pdf')
+    except College.DoesNotExist:
+        raise Http404("College not found")
+
+
 def delete_poster(request):
     if request.method == "POST" and request.user.is_authenticated:
         college = request.user
         
         # Delete the poster for the current college
-        Poster.objects.filter(college=college).delete()
-        
+        PlacementData.objects.filter(college=college).delete()
+        college.pdf.delete(save=False)
         messages.success(request, "Your poster has been deleted successfully.")
         return redirect('index')
     
     return redirect('index')
+
+# views.py
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404
+from .models import PlacementData, College, Student
+from django.contrib.auth.decorators import login_required
+
+@login_required
+@require_POST
+def remove_student_from_placement(request):
+    student_id = request.POST.get('student_id')
+    # college_id = 
+
+    if not student_id:
+        return JsonResponse({'success': False, 'error': 'Missing parameters'}, status=400)
+
+    # Verify objects exist
+    placement = PlacementData.objects.filter(student_id=student_id).first()
+    if not placement:
+        return JsonResponse({'success': False, 'error': 'Placement data not found'}, status=404)
+
+    placement.delete()
+    return JsonResponse({'success': True})
 
 
 from django.shortcuts import render, redirect
@@ -1777,6 +1873,7 @@ def company_list_view(request):
             'name': company.name,
             'lpa': company.lpa,
             'count': count,
+            'id':company.id
         })
 
     return render(request, 'admin_user/company_list.html', {
@@ -1801,6 +1898,23 @@ def add_company_post(request):
 
     return redirect('company_list')
 
+
+def edit_company_post(request, company_id):
+    company = get_object_or_404(Company, id=company_id)
+    if request.method == 'POST':
+        company.name = request.POST.get('name')
+        company.lpa = request.POST.get('lpa')
+        company.save()
+        messages.success(request, 'Company updated successfully.')
+    return redirect('company_list')
+
+
+def delete_company(request, company_id):
+    company = get_object_or_404(Company, id=company_id)
+    if request.method == 'POST':
+        company.delete()
+        messages.success(request, 'Company deleted successfully.')
+    return redirect('company_list')
 # import pandas as pd
 # from django.http import HttpResponse
 # from .models import PlacementData
@@ -1852,6 +1966,8 @@ from django.conf import settings
 @login_required
 def company_students_view(request):
     college = get_object_or_404(College, email=request.user.email)
+    companies_list = Company.objects.all() # Or filter by college if needed
+    # has_sheet = bool( college.sheet_url)
     print(college)
     # Get distinct companies for this college from PlacementData
     companies = Company.objects.filter(
@@ -1861,6 +1977,7 @@ def company_students_view(request):
     context = {
         "companies": companies,
         "college": college,
+        "companies_list":companies_list
     }
     return render(request, "company_students.html", context)
 
@@ -1908,6 +2025,7 @@ def download_student_photo(request, student_id):
                     f.write(chunk)
 
             student.photo = f'student_photos/{filename}'
+            student.is_photo = True
             student.save()
             return JsonResponse({'success': True, 'message': 'Photo downloaded and saved successfully.'})
         else:
@@ -1915,38 +2033,70 @@ def download_student_photo(request, student_id):
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Error downloading photo: {str(e)}'})
 
+
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from .models import Student, Company, PlacementData, College
 
 @login_required
 def add_placement_view(request):
     college = College.objects.get(email=request.user.email)
-    companies = Company.objects.all()  # Or filter by college if needed
-
+    companies = Company.objects.all() # Or filter by college if needed
+    has_sheet = bool( college.sheet_url)
     if request.method == "POST":
-        prn = request.POST.get('prn')
-        company_id = request.POST.get('company_id')
+        company_ids = request.POST.getlist("companies[]")
 
-        student = Student.objects.filter(prn=prn, college=college).first()
-        if not student:
-            messages.error(request, "Student with this PRN does not exist in your college.")
-            return redirect('add_placement')
+        for index, company_id in enumerate(company_ids):
+            company = get_object_or_404(Company, id=company_id)
+            prn_list = request.POST.getlist(f"prns[{index}][]")
 
-        company = get_object_or_404(Company, id=company_id)
+            for prn in prn_list:
+                student = Student.objects.filter(prn=prn.strip(), college=college).first()
 
-        # Create or update placement record
-        placement, created = PlacementData.objects.get_or_create(
-            student=student,
-            company=company,
-            defaults={'college': college}
-        )
+                if not student:
+                    messages.warning(request, f"PRN {prn} not found in your college.")
+                    continue
 
-        if created:
-            messages.success(request, f"Placement added: {student.name} placed in {company.name}")
-        else:
-            messages.info(request, "This placement already exists.")
+                placement, created = PlacementData.objects.get_or_create(
+                    student=student,
+                    company=company,
+                    defaults={'college': college}
+                )
 
-        return redirect('add_placement')
+                if created:
+                    messages.success(request, f"{student.name} placed in {company.name}.")
+                else:
+                    messages.info(request, f"{student.name} is already placed in {company.name}.")
 
-    return render(request, "add_placement.html", {'companies': companies})
+        return redirect('company_students')
+
+    return render(request, "company_students.html", {'companies': companies})
+
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Company, Student, PlacementData
+
+@require_POST
+def add_student_to_company(request, company_id):
+    prn = request.POST.get('prn', '').strip()
+    company = get_object_or_404(Company, id=company_id)
+
+    if not prn:
+        return JsonResponse({'success': False, 'message': 'PRN is required.'})
+
+    try:
+        student = Student.objects.get(prn=prn)
+    except Student.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Student with this PRN does not exist.'})
+
+    # Check if the student already has a placement data for this company
+    if PlacementData.objects.filter(student=student, company=company).exists():
+        return JsonResponse({'success': False, 'message': 'Student already placed in this company.'})
+
+    # Create the placement data record
+    PlacementData.objects.create(student=student, company=company, college=student.college)
+
+    return JsonResponse({'success': True, 'message': 'Student added successfully.'})

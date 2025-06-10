@@ -104,7 +104,7 @@ class CommonData(models.Model):
 
     
 class Company(models.Model):
-    name = models.CharField(max_length=50,null=True)
+    name = models.CharField(max_length=50,unique=True,null=True)
     lpa = models.DecimalField(max_digits=5, decimal_places=2)  # Adjust max_digits as needed
 
 

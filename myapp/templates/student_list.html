@@ -14,6 +14,10 @@
             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
                 <i class="bi bi-upload"></i> Import Students
             </button>
+            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+              + Add Student
+            </button>
+            
             <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
                 <i class="bi bi-trash3-fill"></i> Delete All
             </button>
@@ -81,6 +85,65 @@
         </div>
     </div>
 </div>
+<!-- Add Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <form method="POST" enctype="multipart/form-data" action="{% url 'add_student' %}">
+        {% csrf_token %}
+        <div class="modal-header bg-secondary text-white rounded-top-4">
+          <h5 class="modal-title" id="addStudentLabel">Add New Student</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body px-4 py-3">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Student Name</label>
+              <input type="text" name="name" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">PRN</label>
+              <input type="text" name="prn" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Department</label>
+              <input type="text" name="department" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">College</label>
+              <input type="hidden" name="college" class="form-control" value="{{ request.user.id }}">
+              <input type="text" readonly name="Name" class="form-control" value="{{ request.user.name }}">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Upload Photo (optional)</label>
+              <input type="file" name="photo" class="form-control">
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_photo" id="is_photo">
+                <label class="form-check-label" for="is_photo">
+                  Mark photo as uploaded
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light rounded-bottom-4">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Add Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
     <!-- 🌿 Pagination -->
     {% if students.has_other_pages %}
     <nav aria-label="Student pagination">

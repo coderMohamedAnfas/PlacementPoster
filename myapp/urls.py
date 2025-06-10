@@ -61,6 +61,8 @@ path('download-poster-pdf/', views.download_placement_pdf, name='download_poster
  path("add_placement_view/",views.add_placement_view,name="add_placement"),    
      path('remove_student/', views.remove_student_from_placement, name='remove_student_from_placement'),
  path('companies/<int:company_id>/add-student/', views.add_student_to_company, name='add_student_to_company'),
+path('add-student/', views.add_student, name='add_student'),
+
 ]
 
 

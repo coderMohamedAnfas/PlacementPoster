@@ -1168,9 +1168,6 @@ def generate_poster_pdf(request):
     pdf.showPage()
     pdf.save()
     buffer.seek(0)
-<<<<<<< HEAD
-
-
     college = College.objects.get(email=request.user.email)
 
     if college.pdf:  # Check if PDF exists
@@ -1178,11 +1175,12 @@ def generate_poster_pdf(request):
         college.pdf = None              # Clear the field in the DB
         college.save()                  # Persist the change
     
-=======
     college = College.objects.get(email=request.user.email)
     if college.pdf:
         college.pdf.delete(save=False)
->>>>>>> 7ac6e72 (completion of website)
+    college = College.objects.get(email=request.user.email)
+    if college.pdf:
+        college.pdf.delete(save=False)
 
     college.pdf.save(f"{college.name}_placement_poster.pdf", ContentFile(buffer.read()))
     college.save()
@@ -1227,6 +1225,40 @@ def download_all_college_pdfs(request):
     response = HttpResponse(zip_buffer, content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename="All_Colleges_PDFs.zip"'
     return response
+
+from django.http import JsonResponse
+from django.contrib import messages
+from .models import Student
+
+def add_student(request):
+    if request.method == 'POST':
+        college_id = request.POST['college']
+        name = request.POST['name']
+        prn = request.POST['prn']
+        department = request.POST['department']
+        is_photo = 'is_photo' in request.POST
+        photo = request.FILES.get('photo')
+
+        # Check for duplicate PRN
+        if Student.objects.filter(prn=prn).exists():
+            messages.warning(request, f"Student with PRN {prn} is already in the list.")
+            return redirect('student_list')
+
+        # Create new student
+        Student.objects.create(
+            college_id=college_id,
+            name=name,
+            prn=prn,
+            department=department,
+            photo_url=None,
+            is_photo=is_photo,
+            photo=photo
+        )
+
+        messages.success(request, f"{name} added successfully.")
+        return redirect('student_list')
+
+    return redirect('student_list')
 
 
 from django.http import FileResponse, Http404

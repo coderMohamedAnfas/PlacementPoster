@@ -16,6 +16,8 @@ services:
       - "5432:5432"
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+      - ./credentials:/var/lib/credentials/
+      - ./media:/app/media
     networks:
       - erada_network
 

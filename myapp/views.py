@@ -969,7 +969,12 @@ def generate_poster_pdf(request):
     company_to_students = defaultdict(list)
     
     for placement in placements:
-        company_to_students[placement.company.name + f"  ({str(placement.company.lpa)})"].append((placement.student, placement.company))
+        lpa = placement.company.lpa
+        key = placement.company.name
+        if lpa > 1:
+            key += f"  ({lpa:.2f})"
+        company_to_students[key].append((placement.student, placement.company))
+
 
 
     
@@ -1021,7 +1026,7 @@ def generate_poster_pdf(request):
         pdf.line(110, page_height - 93, page_width - 33, page_height - 93)
         pdf.setFillColorRGB(0, 0, 0.15)  # Deep Navy
         pdf.setFont("Helvetica-Bold", 16)
-        pdf.drawCentredString(page_width / 2, page_height - 113, f"CAMPUS PLACEMENT {cd.start_year.year} - {cd.end_year.year}")
+        pdf.drawCentredString(page_width / 2, page_height - 113, f"CAMPUS PLACEMENT OFFER DETAILS {cd.start_year.year} - {cd.end_year.year}")
         # pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
         pdf.line(30, page_height - 123, page_width - 30, page_height - 123)
 
@@ -1866,7 +1871,6 @@ def delete_poster(request):
         college = request.user
         
         # Delete the poster for the current college
-        PlacementData.objects.filter(college=college).delete()
         college.pdf.delete(save=False)
         messages.success(request, "Your poster has been deleted successfully.")
         return redirect('index')

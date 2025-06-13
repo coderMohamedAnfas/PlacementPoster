@@ -221,7 +221,8 @@ $(document).ready(function() {
                 <div>
                     <h6 class="mb-1">${student.name}</h6>
                     <p class="mb-0 text-muted">PRN: ${student.prn}<br>Dept: ${student.department}</p>
-                </div>
+                    <a href="${student.photo_url}"> See Image</a>
+                    </div>
             </div>
             <div class="card-footer text-end bg-transparent border-0">
                 <button class="btn btn-sm ${student.has_photo ? 'btn-success' : 'btn-primary'} fetch-photo-btn"

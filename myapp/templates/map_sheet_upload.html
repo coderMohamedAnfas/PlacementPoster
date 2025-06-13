@@ -1,0 +1,151 @@
+{% extends "page.html" %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <h2>Import Google Sheet</h2>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sheetUrlModal">
+    Upload Sheet URL
+  </button>
+</div>
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<!-- Modal: Upload Sheet URL -->
+<div class="modal fade" id="sheetUrlModal" tabindex="-1" aria-labelledby="sheetUrlModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="fetchHeadersForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Enter Google Sheet URL</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="url" id="sheetUrlInput" class="form-control" placeholder="Paste Google Sheet URL" required>
+          <small class="text-muted">Make sure the sheet is public ("Anyone with the link").</small>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Fetch Headers</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Modal: Map Headers -->
+<div class="modal fade" id="mapHeadersModal" tabindex="-1" aria-labelledby="mapHeadersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form method="POST" action="{% url 'map_headers_and_import' %}">
+        {% csrf_token %}
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Map Sheet Headers</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="mapHeadersBody">
+            <div class="mb-3">
+              <label for="start_year" class="form-label">Start Year</label>
+              <input
+                type="date"
+                id="start_year"
+                name="start_year"
+                class="form-control"
+                value="{{ data.start_year|date:'Y-m-d' }}"
+                required>
+            </div>
+            <!-- The rest of the dynamic dropdowns will be added here -->
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Save & Continue</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+<!-- Spinner / Wait Message -->
+<div id="waitMessage" class="d-none text-center mt-3">
+  <div class="spinner-border text-primary" role="status"></div>
+  <span class="ms-2">Fetching headers...</span>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const fetchHeadersForm = document.getElementById("fetchHeadersForm");
+
+  fetchHeadersForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const sheetUrl = document.getElementById("sheetUrlInput").value;
+
+    // Show spinner
+    document.getElementById("waitMessage").classList.remove("d-none");
+
+    // Close the first modal
+    const sheetModalEl = document.getElementById("sheetUrlModal");
+    const sheetModalInstance = bootstrap.Modal.getInstance(sheetModalEl);
+    if (sheetModalInstance) sheetModalInstance.hide();
+
+    fetch("{% url 'get_sheet_headers' %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ sheet_url: sheetUrl })
+    })
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById("waitMessage").classList.add("d-none");
+
+      if (data.success) {
+        const headers = data.headers;
+        const mapModalBody = document.getElementById("mapHeadersBody");
+mapModalBody.innerHTML = `
+  <div class="mb-3">
+    <label for="start_year" class="form-label fw-bold">Start Year</label>
+    <input type="date" id="start_year" name="start_year" class="form-control" required>
+  </div>
+`;
+
+
+        const fields = ["name_field", "prn_field", "department_field", "image_field"];
+        fields.forEach(field => {
+          const label = field.replace("_field", "").replace("_", " ").toUpperCase();
+          let html = `<div class="mb-3">
+                        <label class="form-label">${label}</label>
+                        <select class="form-select" name="${field}" required>
+                          <option value="">Select a column</option>`;
+          headers.forEach(header => {
+            html += `<option value="${header}">${header}</option>`;
+          });
+          html += `</select></div>`;
+          mapModalBody.innerHTML += html;
+        });
+
+        const headerModal = new bootstrap.Modal(document.getElementById("mapHeadersModal"), {
+          backdrop: 'static',
+          keyboard: false
+        });
+        headerModal.show();
+
+      } else {
+        alert(data.error || "Error fetching headers");
+      }
+    });
+  });
+
+  document.getElementById('mapHeadersModal').addEventListener('shown.bs.modal', function () {
+    const selects = this.querySelectorAll('select');
+    selects.forEach(select => {
+      select.addEventListener('mousedown', function (e) {
+        e.stopPropagation();
+      });
+    });
+  });
+});
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

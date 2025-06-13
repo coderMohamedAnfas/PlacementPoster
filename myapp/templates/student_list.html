@@ -193,8 +193,15 @@
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-  
+   
         <div class="modal-body">
+                 <!-- Google Sheet Upload -->{% if not has_common_data %}
+  <div class="text-end mb-3">
+    <a href="{% url 'map_headers_and_import' %}" class="btn btn-info px-4">
+      <i class="bi bi-cloud-upload"></i> Upload Sheet URL
+    </a>
+  </div>     
+  {% else %}
           <!-- Nav Tabs -->
           <ul class="nav nav-tabs nav-tabs-bordered mb-3" id="importTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -211,13 +218,23 @@
   
           <!-- Tab Content -->
           <div class="tab-content" id="importTabContent">
-            <!-- Google Sheet Upload -->
+
+
+
             <div class="tab-pane fade show active" id="sheetTab" role="tabpanel" aria-labelledby="sheet-tab">
               <form method="POST" action="{% url 'sheet_url_upload' %}" id="sheetForm">
                 {% csrf_token %}
                 <div class="mb-3">
                   <label for="sheet_url" class="form-label fw-bold">Google Sheet URL</label>
-                  <input type="url" name="sheet_url" id="sheet_url" class="form-control" placeholder="Paste your Google Sheet URL here" required>
+                  <input
+                  type="url"
+                  name="sheet_url"
+                  id="sheet_url"
+                  class="form-control"
+                  placeholder="Paste your Google Sheet URL here"
+                  value="{{ url|default:'' }}"
+                  required>
+                
                   <small class="form-text text-muted">Make sure the sheet is publicly accessible or shared appropriately.</small>
                 </div>
                 <div class="text-end">
@@ -256,7 +273,8 @@
       </div>
     </div>
   </div>
-</div>  
+</div> 
+{% endif %} 
 <!-- JS: Checkbox select all -->
 <script>
     document.getElementById('selectAll').addEventListener('change', function () {

@@ -16,7 +16,7 @@ urlpatterns = [
    path('upload-excel/', views.upload_excel, name='upload_excel'),
 
 
-    path('upload-sheet-url/',views.sheet_url_upload,name="sheet_url_upload"),
+    # path('upload-sheet-url/',views.sheet_url_upload,name="sheet_url_upload"),
     path('admin-panel/',views.admin_panel,name="admin_dash"),
   path("clear-students/", views.clear_students_view, name="clear_students"),
 # path('download-posters/', views.download_posters_page, name='download_posters'),
@@ -63,6 +63,12 @@ path('download-poster-pdf/', views.download_placement_pdf, name='download_poster
  path('companies/<int:company_id>/add-student/', views.add_student_to_company, name='add_student_to_company'),
 path('add-student/', views.add_student, name='add_student'),
 
+
+
+ path('get-sheet-headers/', views.get_sheet_headers, name='get_sheet_headers'),
+
+    # Endpoint to process header mapping and save CommonData
+    path('map-sheet-headers/', views.map_sheet_headers, name='map_headers_and_import'),
 ]
 
 

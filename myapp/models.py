@@ -88,14 +88,13 @@ from django.db import models
 from datetime import timedelta
 
 class CommonData(models.Model):
-    start_year = models.DateField()  # Admin provides the start year
+    college = models.ForeignKey(College, on_delete=models.CASCADE,null=True)
+    start_year = models.DateField(null=True)  # Admin provides the start year
     end_year = models.DateField(blank=True, null=True)  # Calculated field
-    header = models.CharField(max_length=255,default="None")
-    footer = models.CharField(max_length=255,default="None")
     prn_field = models.CharField(max_length=255, blank=True)
     image_field = models.CharField(max_length=255, blank=True)
-    name_field = models.CharField(max_length=255)
-    department_field = models.CharField(max_length=255)
+    name_field = models.CharField(max_length=255,null=True)
+    department_field = models.CharField(max_length=255,null=True)
 
     def save(self, *args, **kwargs):
         if self.start_year:

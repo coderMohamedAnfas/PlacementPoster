@@ -13,7 +13,7 @@ from django.conf import settings
 from django.contrib import messages
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
-from .models import College, Student, CommonData as cd
+from .models import College, Student, CommonData 
 
 def index(request):
     """
@@ -119,7 +119,8 @@ def fetch_google_sheet_data(request, task_id):
         return JsonResponse({'error': f'Google Sheet Error: {str(e)}'}, status=500)
 
     # Update Student Data
-    DATA = cd.objects.first()
+    DATA = CommonData.objects.get(college=college)
+
     total_students = len(data)
     processed = 0
 
@@ -469,7 +470,7 @@ def manage_colleges(request):
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import CommonData
 from django.contrib import messages
-from datetime import datetime
+from datetime import datetime, timezone
 from django.core.mail import send_mail
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -561,10 +562,12 @@ from .models import Student, PlacementData
 def student_list(request):
     college = request.user  # Logged-in college
     query = request.GET.get('q')
+    college = get_object_or_404(College, email=request.user.email)
 
     # 🎓 Get students of this college
     students = Student.objects.filter(college=college).order_by('prn')
 
+    has_common_data = CommonData.objects.filter(college=college).exists()
     # 🔍 Search by PRN or name
     if query:
         students = students.filter(Q(name__icontains=query) | Q(prn__icontains=query))
@@ -582,6 +585,9 @@ def student_list(request):
     context = {
         'students': students,
         'placed_prns': placed_prns,
+         "has_common_data":  has_common_data,
+         "url" : college.sheet_url
+
     }
     return render(request, 'student_list.html', context)
 
@@ -2148,3 +2154,89 @@ def add_student_to_company(request, company_id):
     PlacementData.objects.create(student=student, company=company, college=student.college)
 
     return JsonResponse({'success': True, 'message': 'Student added successfully.'})
+
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+import gspread
+
+@login_required
+@require_POST
+def get_sheet_headers(request):
+    sheet_url = request.POST.get("sheet_url", "")
+    try:
+        sheet_id = extract_sheet_id(sheet_url)
+        
+        mime_type = drive_service.files().get(
+            fileId=sheet_id, fields="mimeType"
+        ).execute().get("mimeType", "")
+
+        if mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+            # Convert Excel to Google Sheet
+            file_metadata = {
+                "name": "Converted Sheet",
+                "mimeType": "application/vnd.google-apps.spreadsheet"
+            }
+            converted_file = drive_service.files().copy(
+                fileId=sheet_id, body=file_metadata
+            ).execute()
+            sheet_id = converted_file["id"]
+
+        spreadsheet = client.open_by_key(sheet_id)
+        worksheet = spreadsheet.sheet1
+        headers = worksheet.row_values(1)
+
+        request.session['sheet_url'] = f"https://docs.google.com/spreadsheets/d/{sheet_id}"
+        return JsonResponse({"success": True, "headers": headers})
+
+    except gspread.exceptions.APIError:
+        return JsonResponse({"success": False, "error": "Make sure the sheet is public (shared with 'Anyone with the link')."})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": f"Unexpected error: {str(e)}"})
+    
+from django.contrib import messages
+
+
+
+from django.shortcuts import render, redirect
+from datetime import datetime
+
+@login_required
+def map_sheet_headers(request):
+    if request.method == 'POST':
+        try:
+            college = College.objects.get(email=request.user.email)
+
+            # Get mapped headers
+            name_field = request.POST.get("name_field")
+            department_field = request.POST.get("department_field")
+            prn_field = request.POST.get("prn_field")
+            image_field = request.POST.get("image_field")
+            start_year_str = request.POST.get("start_year")
+
+            # Parse and validate start year
+            start_year = datetime.strptime(start_year_str, "%Y-%m-%d").date()
+
+            sheet_url = request.session.get("sheet_url")
+            if sheet_url:
+                college.sheet_url = sheet_url
+                college.save()
+
+            # Save mapping
+            CommonData.objects.update_or_create(
+                college=college,
+                defaults={
+                    "start_year": start_year,
+                    "name_field": name_field,
+                    "department_field": department_field,
+                    "prn_field": prn_field,
+                    "image_field": image_field,
+                },
+            )
+            messages.success(request, "Header mapping saved successfully.")
+            return redirect("student_list")
+
+        except Exception as e:
+            messages.error(request, f"Failed to save header mapping: {str(e)}")
+
+    return render(request, "map_sheet_upload.html")

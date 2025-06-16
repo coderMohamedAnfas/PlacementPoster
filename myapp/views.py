@@ -148,44 +148,7 @@ def fetch_google_sheet_data(request, task_id):
 from django.views.decorators.csrf import csrf_exempt
 
 
-# @login_required
-# @csrf_exempt
-# def upload_excel(request):
-#     if request.method == 'POST' and request.FILES.get('excel_file'):
-#         excel_file = request.FILES['excel_file']
-#         try:
-#             df = pd.read_excel(excel_file)
 
-#             college = College.objects.get(email=request.user.email)
-#             DATA = cd.objects.first()
-
-#             for _, row in df.iterrows():
-#                 prn = row.get(DATA.prn_field, "")
-#                 if not prn:
-#                     continue
-#                 Student.objects.update_or_create(
-#                     prn=prn,
-#                     defaults={
-#                         'name': row.get(DATA.name_field, ""),
-#                         'department': row.get(DATA.department_field, ""),
-#                         'college': college,
-#                         'photo_url': row.get(DATA.image_field, ""),
-#                     }
-#                 )
-
-#             messages.success(request, "✅ Excel data imported successfully!")
-#             return redirect('manage_students')
-
-#         except Exception as e:
-#             messages.error(request, f"❌ Error processing file: {str(e)}")
-#             return redirect('manage_students')
-
-#     messages.error(request, "❌ No file uploaded.")
-#     return redirect('manage_students')
-@login_required
-@csrf_exempt
-def upload_excel(request):
-    pass
 
 def transform_google_drive_url(url):
     """Converts Google Drive share links to direct links."""
@@ -1287,542 +1250,6 @@ def download_college_pdf(request, college_id):
     else:
         raise Http404("This college has no PDF uploaded.")
 
-# import zipfile
-# from io import BytesIO
-# from django.http import HttpResponse
-# from reportlab.lib.pagesizes import A4
-# from reportlab.pdfgen import canvas
-# from django.shortcuts import get_object_or_404
-# from .models import College, Student, CommonData
-# from reportlab.lib.colors import HexColor
-# from reportlab.lib.utils import ImageReader
-
-# def generate_poster_pdf_for_zip(poster):
-#     """Generate PDF for a given poster and return a BytesIO buffer."""
-#     print(poster)
-#     college = poster.college
-#     poster_data = poster.data  # JSON data (companies & PRNs)
-#     print(poster_data)
-#     cd = CommonData.objects.first()
-
-#     # Fetch poster for the logged-in college
-#     # try:
-#     #     poster = get_object_or_404(Poster, college=college)
-#     # except:
-#     #     messages.error(request, "Error: Please Insert Atleast One Placed Student")
-#     #     return redirect('index')
-
-#     # poster_data = poster.data  # JSON field containing company and PRN data
-#     college_name = college.name
-
-#     page_background_styles = {
-#         'diagonal_lines': {
-#             'base_color': HexColor("#f0f0f0"),
-#             'pattern_color': HexColor("#e0e0e0"),
-#             'pattern_type': 'diagonal_lines'
-#         },
-#         'dots': {
-#             'base_color': HexColor("#f5f5f5"),
-#             'pattern_color': HexColor("#e5e5e5"),
-#             'pattern_type': 'dots'
-#         },
-#         'grid': {
-#             'base_color': HexColor("#ffffff"),
-#             'pattern_color': HexColor("#f0f0f0"),
-#             'pattern_type': 'grid'
-#         },
-#         'waves': {
-#             'base_color': HexColor("#f8f8f8"),
-#             'pattern_color': HexColor("#e8e8f8"),
-#             'pattern_type': 'waves'
-#         },
-#         'gradient': {
-#             'base_color': HexColor("#ffffff"),
-#             'pattern_color': HexColor("#f0f0f0"),
-#             'pattern_type': 'gradient'
-#         }
-#     }
-#     # PDF configuration
-#     page_width, page_height = A4
-#     margin = 30
-#     image_size = 77
-#     student_spacing = 33
-#     company_spacing = 25
-#     max_x = page_width
-#     students_per_row = 5
-
-#     buffer = BytesIO()
-#     pdf = canvas.Canvas(buffer, pagesize=A4)
-#     # draw_gradient_background(pdf, page_width, page_height)
-#     pdf.setTitle(college_name)
-
-#     # Background color (Light Grey)
-#     pdf.setFillColor(HexColor("#f5ede4"))
-#     pdf.rect(0, 0, page_width, page_height, fill=1, stroke=0)
-
-#     # Load college logo
-#     try:
-#         college_logo = ImageReader(college.logo.path)
-#     except Exception as e:
-#         print(f"Error loading college logo: {e}")
-#         college_logo = None
-
-#     def draw_header_footer():
-#         # Draw full-page background pattern before other elements
-#         # draw_full_page_background_pattern(pdf, page_width, page_height, background_style)
-#         """ Draws header and footer on each page """
-#         pdf.setFillColor(HexColor("#a47723"))  # Navy blue
-#         pdf.rect(0, page_height - 93, page_width, 180, fill=1, stroke=0)
-
-#         pdf.setStrokeColor(HexColor("#a47723"))  # Gold
-#         pdf.rect(margin - 10, margin - 15, page_width - (2 * margin) + 20, page_height - 30)
-
-#         pdf.setFillColor(HexColor("#ffffff"))  # Gold text
-#         pdf.setFont("Helvetica-Bold", 22)
-#         pdf.drawCentredString(page_width / 2, page_height - 38, "STATE PLACEMENT CELL")
-#         pdf.setFont("Helvetica", 10)
-#         pdf.drawCentredString(page_width / 2, page_height - 50, "Government and Government Aided Polytechnic Colleges, Kerala")
-#         pdf.line(30, page_height - 55, page_width - 30, page_height - 55)
-
-#         pdf.setFont("Helvetica-Bold", 18)
-#         draw_college_name(pdf, college_name, page_width / 2, page_height - 80, max_width=page_width-170)
-#         # pdf.drawCentredString(page_width / 2, page_height - 80, college_name.upper())
-#         pdf.line(110, page_height - 93, page_width - 33, page_height - 93)
-#         pdf.setFillColorRGB(0, 0, 0.15)  # Deep Navy
-#         pdf.setFont("Helvetica-Bold", 16)
-#         pdf.drawCentredString(page_width / 2, page_height - 113, f"CAMPUS PLACEMENT {cd.start_year.year} - {cd.end_year.year}")
-#         # pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
-#         pdf.line(30, page_height - 123, page_width - 30, page_height - 123)
-
-        
-#         pdf.setFillColorRGB(244, 0, 0.15)
-#         pdf.setFont("GB", 23)
-#         pdf.drawCentredString(page_width / 2, page_height - 147, f"Congratulations On Your Placement")
-#         pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
-
-#         if college_logo:
-#             pdf.drawImage(college_logo, 20, page_height - 75, width=60, height=60, mask='auto')
-
-#     x, y = margin + 9, page_height - 280
-#     draw_header_footer()
-
-#     all_students = []
-#     # Dictionary to track company indices for consistent colors
-#     company_indices = {}
-#     company_index = 0
-
-#     for entry in poster_data:
-#         company_name = entry.get('company', 'Unknown Company')
-#         prn = entry.get('prn')
-#         if not prn:
-#             continue
-
-#         # Assign index to company if not already assigned
-#         if company_name not in company_indices:
-#             company_indices[company_name] = company_index
-#             company_index += 1
-
-#         try:
-#             student = Student.objects.get(prn=prn, college=poster.college)
-#             all_students.append({
-#                 'student': student,
-#                 'company': company_name,
-#                 'company_index': company_indices[company_name]
-#             })
-#         except Student.DoesNotExist:
-#             print(f"Student with PRN {prn} not found.")
-
-#     current_company = None
-#     students_in_current_row = 0
-#     company_start_x = None
-#     company_start_y = None
-#     current_company_index = None
-#     current_bg_color = None
-#     current_fg_color = None
-
-#     for index, student_data in enumerate(all_students):
-#         student = student_data['student']
-#         company = student_data['company']
-#         company_index = student_data['company_index']
-
-#         # Start a new company block
-#         if current_company != company:
-#             if current_company is not None:
-#                 # Draw the border for the previous company
-#                 width = (students_in_current_row * (image_size + student_spacing)) - student_spacing
-#                 pdf.setStrokeColor(current_bg_color)  # Use company color for border
-#                 pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
-
-#                 # Display company name above the group
-#                 pdf.setFillColor(HexColor("#333333"))  
-#                 pdf.setFont("Helvetica-Bold", 11)
-#                 print(current_company)
-#                 print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
-#                 draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
-
-#             # Reset values for the new company
-#             company_start_x = x
-#             company_start_y = y
-#             students_in_current_row = 0
-#             current_company = company
-#             current_company_index = company_index
-#             current_bg_color, current_fg_color = get_company_colors(current_company_index)
-
-#         # Move to a new row if space exceeds
-#         if students_in_current_row >= students_per_row or x + image_size  > max_x-10:
-#             # Draw the border for the previous row's company
-#             width = (students_in_current_row * (image_size + student_spacing)) - student_spacing
-#             pdf.setStrokeColor(current_bg_color)  # Use company color for border
-#             if width > 0:
-#                 print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
-#                 pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
-
-#                 pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
-#                 pdf.setFont("Helvetica-Bold", 11)
-
-#                 print(1,current_company)
-#                 draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
-
-#             # Start a new row
-#             x = margin + 9
-#             y -= (image_size + 90)
-
-#             if y < margin + 10:
-#                 pdf.showPage()
-#                 draw_header_footer()
-#                 x = margin + 9
-#                 y = page_height - 280
-
-#             company_start_x = x
-#             company_start_y = y
-#             students_in_current_row = 0
-
-#         # Draw student photo with company color
-#         try:
-#             img = ImageReader(student.photo.path)
-#             draw_circular_image(pdf, img, x, y, image_size, current_bg_color)
-#         except Exception as e:
-#             print(f"Error loading student photo for {student.name}: {e}")
-#             pdf.setFillColorRGB(0.6, 0.31, 0.3)
-#             pdf.circle(x + image_size / 2, y + image_size / 2, image_size / 2, fill=1)
-
-#         # Define name background dimensions
-#         name_bg_width = image_size + 10
-#         name_bg_height = 18  # Height for the name background
-#         name_bg_y = y - 20  # Position the name background rectangle
-
-#         # Draw background for student name using company color
-#         pdf.setFillColor(current_bg_color)  # Use company color
-#         pdf.roundRect(x - 5, name_bg_y-8, name_bg_width, name_bg_height+7, 5, fill=1, stroke=0)
-
-#         # Draw student name
-#         student_name = student.name
-#         font_size = 7
-#         pdf.setFillColor(current_fg_color)  # Use company foreground color
-#         pdf.setFont("Helvetica-Bold", font_size)
-#         pdf.drawCentredString(x + (image_size / 2), name_bg_y + 5, student_name)
-
-#         # Draw student department below the name
-#         pdf.setFont("Helvetica", 6)
-#         pdf.drawCentredString(x + (image_size / 2), name_bg_y - 5, student.department)
-
-#         # Update positions
-#         students_in_current_row += 1
-#         x += image_size + student_spacing
-
-#     # Draw the final company's border
-#     if current_company is not None:
-#         width = (students_in_current_row * (image_size + student_spacing)) - student_spacing
-#         pdf.setStrokeColor(current_bg_color)  # Use company color for border
-#         pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
-
-#         pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
-#         pdf.setFont("Helvetica-Bold", 11)
-#         print(2,current_company)
-#         draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
-
-  
-#     pdf.showPage()
-#     pdf.save()
-#     buffer.seek(0)
-#     # response = HttpResponse(buffer, content_type="application/pdf")
-#     # response["Content-Disposition"] = "inline; filename=placement_poster.pdf"  # Use 'inline' to show in iframe
-#     # return response
-#     return buffer
-
-# def download_all_posters_zip(request):
-#     """Generate and return a ZIP file containing PDFs of all posters."""
-#     posters = Poster.objects.all()
-    
-#     if not posters.exists():
-#         messages.warning(request,"No posters available")
-#         return HttpResponse("No posters available.", content_type="text/plain")
-
-#     zip_buffer = BytesIO()
-#     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-#         for poster in posters:
-#             pdf_buffer = generate_poster_pdf_for_zip(poster)
-#             file_name = f"{poster.college.name.replace(' ', '_')}_poster.pdf"
-#             zip_file.writestr(file_name, pdf_buffer.getvalue())
-
-#     zip_buffer.seek(0)
-
-#     response = HttpResponse(zip_buffer, content_type="application/zip")
-#     response["Content-Disposition"] = 'attachment; filename="all_posters.zip"'
-#     return response
-
-
-
-# def download_individual_poster(request, poster_id):
-#     # poster = get_object_or_404(Poster,id=poster_id)/
-#     # poster = get_object_or_404(Poster, college=request.user)
-#     # poster = get_object_or_404(Poster,id=poster_id)
-#     poster = ""
-#     college = College.objects.get(email=poster.college.email)
-#     # Extract dynamic data (companies and PRNs) from the 'data' field of the Poster model
-#     poster_data = poster.data  # This is a JSON field, so we get a Python dict
-
-
-#     cd = CommonData.objects.first()
-
-#     # Fetch poster for the logged-in college
- 
-#     # poster_data = poster.data  # JSON field containing company and PRN data
-#     college_name = college.name
-
-#     page_background_styles = {
-#         'diagonal_lines': {
-#             'base_color': HexColor("#f0f0f0"),
-#             'pattern_color': HexColor("#e0e0e0"),
-#             'pattern_type': 'diagonal_lines'
-#         },
-#         'dots': {
-#             'base_color': HexColor("#f5f5f5"),
-#             'pattern_color': HexColor("#e5e5e5"),
-#             'pattern_type': 'dots'
-#         },
-#         'grid': {
-#             'base_color': HexColor("#ffffff"),
-#             'pattern_color': HexColor("#f0f0f0"),
-#             'pattern_type': 'grid'
-#         },
-#         'waves': {
-#             'base_color': HexColor("#f8f8f8"),
-#             'pattern_color': HexColor("#e8e8f8"),
-#             'pattern_type': 'waves'
-#         },
-#         'gradient': {
-#             'base_color': HexColor("#ffffff"),
-#             'pattern_color': HexColor("#f0f0f0"),
-#             'pattern_type': 'gradient'
-#         }
-#     }
-#     # PDF configuration
-#     page_width, page_height = A4
-#     margin = 30
-#     image_size = 77
-#     student_spacing = 33
-#     company_spacing = 25
-#     max_x = page_width
-#     students_per_row = 5
-
-#     buffer = BytesIO()
-#     pdf = canvas.Canvas(buffer, pagesize=A4)
-#     draw_gradient_background(pdf, page_width, page_height)
-#     pdf.setTitle(college_name)
-
-#     # Background color (Light Grey)
-#     pdf.setFillColor(HexColor("#f5ede4"))
-#     pdf.rect(0, 0, page_width, page_height, fill=1, stroke=0)
-
-#     # Load college logo
-#     try:
-#         college_logo = ImageReader(college.logo.path)
-#     except Exception as e:
-#         print(f"Error loading college logo: {e}")
-#         college_logo = None
-
-#     def draw_header_footer():
-#         # Draw full-page background pattern before other elements
-#         # draw_full_page_background_pattern(pdf, page_width, page_height, background_style)
-#         """ Draws header and footer on each page """
-#         pdf.setFillColor(HexColor("#a47723"))  # Navy blue
-#         pdf.rect(0, page_height - 93, page_width, 180, fill=1, stroke=0)
-
-#         pdf.setStrokeColor(HexColor("#a47723"))  # Gold
-#         pdf.rect(margin - 10, margin - 15, page_width - (2 * margin) + 20, page_height - 30)
-
-#         pdf.setFillColor(HexColor("#ffffff"))  # Gold text
-#         pdf.setFont("Helvetica-Bold", 22)
-#         pdf.drawCentredString(page_width / 2, page_height - 38, "STATE PLACEMENT CELL")
-#         pdf.setFont("Helvetica", 10)
-#         pdf.drawCentredString(page_width / 2, page_height - 50, "Government and Government Aided Polytechnic Colleges, Kerala")
-#         pdf.line(30, page_height - 55, page_width - 30, page_height - 55)
-
-#         pdf.setFont("Helvetica-Bold", 18)
-#         draw_college_name(pdf, college_name, page_width / 2, page_height - 80, max_width=page_width-170)
-#         # pdf.drawCentredString(page_width / 2, page_height - 80, college_name.upper())
-#         pdf.line(110, page_height - 93, page_width - 33, page_height - 93)
-#         pdf.setFillColorRGB(0, 0, 0.15)  # Deep Navy
-#         pdf.setFont("Helvetica-Bold", 16)
-#         pdf.drawCentredString(page_width / 2, page_height - 113, f"CAMPUS PLACEMENT {cd.start_year.year} - {cd.end_year.year}")
-#         # pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
-#         pdf.line(30, page_height - 123, page_width - 30, page_height - 123)
-
-        
-#         pdf.setFillColorRGB(244, 0, 0.15)
-#         pdf.setFont("GB", 23)
-#         pdf.drawCentredString(page_width / 2, page_height - 147, f"Congratulations On Your Placement")
-#         pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
-
-#         if college_logo:
-#             pdf.drawImage(college_logo, 20, page_height - 75, width=60, height=60, mask='auto')
-
-#     x, y = margin + 9, page_height - 280
-#     draw_header_footer()
-
-#     all_students = []
-#     # Dictionary to track company indices for consistent colors
-#     company_indices = {}
-#     company_index = 0
-
-#     for entry in poster_data:
-#         company_name = entry.get('company', 'Unknown Company')
-#         prn = entry.get('prn')
-#         if not prn:
-#             messages.error(request,f"No Student With PRN {prn}")
-#             continue
-
-#         # Assign index to company if not already assigned
-#         if company_name not in company_indices:
-#             company_indices[company_name] = company_index
-#             company_index += 1
-
-#         try:
-#             student = Student.objects.get(prn=prn, college=poster.college)
-#             all_students.append({
-#                 'student': student,
-#                 'company': company_name,
-#                 'company_index': company_indices[company_name]
-#             })
-#         except Student.DoesNotExist:
-#             print(f"Student with PRN {prn} not found.")
-
-#     current_company = None
-#     students_in_current_row = 0
-#     company_start_x = None
-#     company_start_y = None
-#     current_company_index = None
-#     current_bg_color = None
-#     current_fg_color = None
-
-#     for index, student_data in enumerate(all_students):
-#         student = student_data['student']
-#         company = student_data['company']
-#         company_index = student_data['company_index']
-
-#         # Start a new company block
-#         if current_company != company:
-#             if current_company is not None:
-#                 # Draw the border for the previous company
-#                 width = (students_in_current_row * (image_size + student_spacing)) - student_spacing
-#                 pdf.setStrokeColor(current_bg_color)  # Use company color for border
-#                 pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
-
-#                 # Display company name above the group
-#                 pdf.setFillColor(HexColor("#333333"))  
-#                 pdf.setFont("Helvetica-Bold", 11)
-#                 print(current_company)
-#                 print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
-#                 draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
-
-#             # Reset values for the new company
-#             company_start_x = x
-#             company_start_y = y
-#             students_in_current_row = 0
-#             current_company = company
-#             current_company_index = company_index
-#             current_bg_color, current_fg_color = get_company_colors(current_company_index)
-
-#         # Move to a new row if space exceeds
-#         if students_in_current_row >= students_per_row or x + image_size  > max_x-10:
-#             # Draw the border for the previous row's company
-#             width = (students_in_current_row * (image_size + student_spacing)) - student_spacing
-#             pdf.setStrokeColor(current_bg_color)  # Use company color for border
-#             if width > 0:
-#                 print(width,company_start_x - 10,company_start_y - 40,width + 20,image_size + 80)
-#                 pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
-
-#                 pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
-#                 pdf.setFont("Helvetica-Bold", 11)
-
-#                 print(1,current_company)
-#                 draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
-
-#             # Start a new row
-#             x = margin + 9
-#             y -= (image_size + 90)
-
-#             if y < margin + 10:
-#                 pdf.showPage()
-#                 draw_header_footer()
-#                 x = margin + 9
-#                 y = page_height - 280
-
-#             company_start_x = x
-#             company_start_y = y
-#             students_in_current_row = 0
-
-#         # Draw student photo with company color
-#         try:
-#             img = ImageReader(student.photo.path)
-#             draw_circular_image(pdf, img, x, y, image_size, current_bg_color)
-#         except Exception as e:
-#             print(f"Error loading student photo for {student.name}: {e}")
-#             pdf.setFillColorRGB(0.6, 0.31, 0.3)
-#             pdf.circle(x + image_size / 2, y + image_size / 2, image_size / 2, fill=1)
-
-#         # Define name background dimensions
-#         name_bg_width = image_size + 10
-#         name_bg_height = 18  # Height for the name background
-#         name_bg_y = y - 20  # Position the name background rectangle
-
-#         # Draw background for student name using company color
-#         pdf.setFillColor(current_bg_color)  # Use company color
-#         pdf.roundRect(x - 5, name_bg_y-8, name_bg_width, name_bg_height+7, 5, fill=1, stroke=0)
-
-#         # Draw student name
-#         student_name = student.name
-#         font_size = 7
-#         pdf.setFillColor(current_fg_color)  # Use company foreground color
-#         pdf.setFont("Helvetica-Bold", font_size)
-#         pdf.drawCentredString(x + (image_size / 2), name_bg_y + 5, student_name)
-
-#         # Draw student department below the name
-#         pdf.setFont("Helvetica", 6)
-#         pdf.drawCentredString(x + (image_size / 2), name_bg_y - 5, student.department)
-
-#         # Update positions
-#         students_in_current_row += 1
-#         x += image_size + student_spacing
-
-#     # Draw the final company's border
-#     if current_company is not None:
-#         width = (students_in_current_row * (image_size + student_spacing)) - student_spacing
-#         pdf.setStrokeColor(current_bg_color)  # Use company color for border
-#         pdf.rect(company_start_x - 10, company_start_y - 40, width + 20, image_size + 80)
-
-#         pdf.setFillColor(HexColor("#333333"))  # Dark Grey Text
-#         pdf.setFont("Helvetica-Bold", 11)
-#         print(2,current_company)
-#         draw_company_name(pdf, current_company, company_start_x + (width / 2), company_start_y + image_size + 20, width)
-
-    
-#     pdf.showPage()
-#     pdf.save()
-#     buffer.seek(0)
-#     return HttpResponse(buffer, content_type="application/pdf")
-
 
 def edit_student(request, pk):
     student = get_object_or_404(Student, pk=pk)
@@ -1969,44 +1396,250 @@ def delete_company(request, company_id):
         company.delete()
         messages.success(request, 'Company deleted successfully.')
     return redirect('company_list')
-# import pandas as pd
-# from django.http import HttpResponse
-# from .models import PlacementData
-# from django.contrib.auth.decorators import login_required
-# from io import BytesIO
 
-# @login_required
-# def download_excel(request):
-#     # Fetch placement data
-#     data = PlacementData.objects.select_related('student', 'company', 'college')
 
-#     # Convert to list of dicts for pandas
-#     rows = []
-#     for entry in data:
-#         rows.append({
-#             'Student Name': entry.student.name,
-#             'PRN': entry.student.prn,
-#             'Department': entry.student.department,
-#             'College': entry.college.name,
-#             'Company': entry.company.name if entry.company else 'N/A',
-#             'LPA': entry.company.lpa if entry.company else 'N/A',
-#         })
 
-#     # Create pandas DataFrame
-#     df = pd.DataFrame(rows)
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import redirect
+from django.contrib import messages
+from openpyxl import load_workbook
+from .models import Student, College, CommonData as cd  # adjust if model names differ
 
-#     # Create Excel file in memory
-#     excel_file = BytesIO()
-#     df.to_excel(excel_file, index=False)
-#     excel_file.seek(0)
+@login_required
+@csrf_exempt
+def upload_excel(request):
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES['excel_file']
+        try:
+            wb = load_workbook(excel_file)
+            ws = wb.active
 
-#     # Return as downloadable response
-#     response = HttpResponse(
-#         excel_file,
-#         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-#     )
-#     response['Content-Disposition'] = 'attachment; filename="placements.xlsx"'
-#     return response
+            headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+
+            college = College.objects.get(email=request.user.email)
+            DATA = CommonData.objects.get(college=college)
+
+            def get_col_index(field_name):
+                try:
+                    return headers.index(field_name)
+                except ValueError:
+                    return -1
+
+            prn_idx = get_col_index(DATA.prn_field)
+            name_idx = get_col_index(DATA.name_field)
+            dept_idx = get_col_index(DATA.department_field)
+            photo_idx = get_col_index(DATA.image_field)
+
+            if prn_idx == -1:
+                messages.error(request, "❌ file does not contains the required attributes here is the basic file with required columns\n ")
+                return return_template_excel(DATA)
+
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                prn = row[prn_idx]
+                if not prn:
+                    continue
+
+                name = row[name_idx] if name_idx != -1 else ""
+                department = row[dept_idx] if dept_idx != -1 else ""
+                photo_url = row[photo_idx] if photo_idx != -1 else ""
+
+                Student.objects.update_or_create(
+                    prn=prn,
+                    defaults={
+                        'name': name,
+                        'department': department,
+                        'college': college,
+                        'photo_url': photo_url,
+                    }
+                )
+
+            messages.success(request, "✅ Excel data imported successfully!")
+            return redirect('student_list')
+
+        except Exception as e:
+            messages.error(request, f"❌ Error processing file: {str(e)}")
+            return redirect('student_list')
+
+    messages.error(request, "❌ No file uploaded.")
+    return redirect('student_list')
+
+
+def return_template_excel(DATA):
+    # Create a workbook with required column headers
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Required Format"
+
+    ws.append([
+        DATA.prn_field or 'PRN',
+        DATA.name_field or 'Name',
+        DATA.department_field or 'Department',
+        DATA.image_field or 'Photo URL'
+    ])
+
+    # Optionally, you can add a sample row
+    ws.append(["1234567890", "John Doe", "Computer Science", "https://example.com/photo.jpg"])
+
+    # Save to memory
+    excel_file = BytesIO()
+    wb.save(excel_file)
+    excel_file.seek(0)
+
+    response = HttpResponse(
+        excel_file,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="required_format.xlsx"'
+    return response
+
+
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from openpyxl import load_workbook
+from .models import Company
+
+@login_required
+@csrf_exempt
+def upload_companies_excel(request):
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES['excel_file']
+        try:
+            wb = load_workbook(excel_file)
+            ws = wb.active
+
+            headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+            try:
+                name_idx = headers.index("Company Name")
+                lpa_idx = headers.index("LPA")
+            except ValueError as e:
+                messages.error(request, "❌ Columns 'Company Name' and 'LPA' must be present.")
+                return redirect('company_list')  # change to your URL name
+
+            count = 0
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                name = row[name_idx]
+                lpa = row[lpa_idx]
+                if name and lpa:
+                    Company.objects.update_or_create(
+                        name=name.strip(),
+                        defaults={'lpa': lpa}
+                    )
+                    count += 1
+
+            messages.success(request, f"✅ {count} companies imported successfully!")
+            return redirect('company_list')
+
+        except Exception as e:
+            messages.error(request, f"❌ Error processing file: {str(e)}")
+            return redirect('company_list')
+
+    messages.error(request, "❌ No file uploaded.")
+    return redirect('company_list')
+
+
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.styles import Font
+from .models import College, PlacementData
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def download_placed_students_excel(request):
+    wb = Workbook()
+    wb.remove(wb.active)  # Remove default sheet
+
+    header_font = Font(bold=True)
+
+    # Fetch all placements with required related data
+    placements = PlacementData.objects.select_related('college', 'student', 'company')
+
+    # Organize by college
+    college_map = {}  # { college_name: [placement, placement, ...] }
+
+    for placement in placements:
+        college_name = placement.college.name[:31]  # Excel sheet limit
+        if college_name not in college_map:
+            college_map[college_name] = []
+        college_map[college_name].append(placement)
+
+    for college_name, placement_list in college_map.items():
+        ws = wb.create_sheet(title=college_name)
+
+        headers = ['PRN', 'Name', 'Department', 'Photo URL', 'Company', 'LPA']
+        ws.append(headers)
+        for cell in ws[1]:
+            cell.font = header_font
+
+        for placement in placement_list:
+            student = placement.student
+            company = placement.company
+            ws.append([
+                student.prn,
+                student.name,
+                student.department,
+                student.photo_url,
+                company.name if company else 'N/A',
+                company.lpa if company else 'N/A',
+            ])
+
+    # Return Excel file
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="Placed_Students_By_College.xlsx"'
+    wb.save(response)
+    return response
+
+
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from .models import PlacementData
+from io import BytesIO
+from openpyxl import Workbook
+
+@login_required
+def download_excel(request):
+    # Create workbook and worksheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Placement Data"
+
+    # Write header
+    headers = ['Student Name', 'PRN', 'Department', 'College', 'Company', 'LPA']
+    ws.append(headers)
+
+    # Fetch placement data
+    data = PlacementData.objects.select_related('student', 'company', 'college')
+
+    # Write data rows
+    for entry in data:
+        row = [
+            entry.student.name,
+            entry.student.prn,
+            entry.student.department,
+            entry.college.name,
+            entry.company.name if entry.company else 'N/A',
+            entry.company.lpa if entry.company else 'N/A',
+        ]
+        ws.append(row)
+
+    # Save to in-memory file
+    excel_file = BytesIO()
+    wb.save(excel_file)
+    excel_file.seek(0)
+
+    # Send as HTTP response
+    response = HttpResponse(
+        excel_file,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="placements.xlsx"'
+    return response
 
 
 from django.shortcuts import render, redirect, get_object_or_404

@@ -8,6 +8,10 @@
     <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addCompanyModal">
         Add Company
     </button>
+<!-- Trigger Modal Button -->
+<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#uploadCompanyModal">
+  <i class="bi bi-upload me-1"></i> Upload Companies Excel
+</button>
 
    
 
@@ -69,6 +73,32 @@
       </tbody>
   </table>
 </div>
+<!-- Upload Companies Modal -->
+<div class="modal fade" id="uploadCompanyModal" tabindex="-1" aria-labelledby="uploadCompanyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow-lg">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="uploadCompanyModalLabel">Upload Companies Excel</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" enctype="multipart/form-data" action="{% url 'upload_companies' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p class="text-muted">Excel file must contain <strong>'Company Name'</strong> and <strong>'LPA'</strong> as headers.</p>
+          <div class="mb-3">
+            <label for="excelFile" class="form-label">Select Excel File (.xlsx)</label>
+            <input class="form-control" type="file" name="excel_file" id="excelFile" accept=".xlsx" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Upload</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- Modal -->
 <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-labelledby="addCompanyModalLabel" aria-hidden="true">
   <div class="modal-dialog">

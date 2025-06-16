@@ -3,121 +3,710 @@
 {% block title %}Download Posters{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="card shadow-lg border-0">
-        <div class="card-header text-white" style="background: linear-gradient(to right, #1181cb, #2575fc);">
-            <h3 class="mb-0"><i class="bi bi-download me-2"></i>Download Posters</h3>
-        </div>
-        <div class="card-body">
-            {% if colleges %}
-            <!-- Tabs -->
-            <ul class="nav nav-tabs mb-3" id="downloadTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active text-primary-emphasis fw-semibold" id="individual-tab"
-                        data-bs-toggle="tab" data-bs-target="#individual" type="button" role="tab">
-                        <i class="bi bi-person-lines-fill me-1"></i>Individual Download
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-primary-emphasis fw-semibold" id="all-tab"
-                        data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
-                        <i class="bi bi-archive-fill me-1"></i>Download All
-                    </button>
-                </li>
-            </ul>
-
-            <!-- Tab Contents -->
-            <div class="tab-content" id="downloadTabContent">
-                <!-- Individual Tab -->
-                <div class="tab-pane fade show active" id="individual" role="tabpanel">
-                    <ul class="list-group mb-4">
-                        {% for college in colleges %}
-                            {% if college.pdf %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center border-start border-4 border-info bg-light shadow-sm mb-2 rounded">
-                                <strong>{{ college.name }}</strong>
-                                <a href="{% url 'download_college_pdf' college.id %}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-file-earmark-arrow-down"></i> Download
-                                </a>
-                            </li>
-                            {% endif %}
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <!-- All Tab -->
-                <div class="tab-pane fade" id="all" role="tabpanel">
-                    <div class="text-center mt-4">
-                        <a href="{% url 'download_all_college_pdfs' %}" class="btn btn-primary btn-lg">
-                            <i class="bi bi-box-arrow-down"></i> Download All Posters (ZIP)
+<div class="container-fluid py-4">
+    <!-- Action Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="action-bar p-3 rounded-4 shadow-sm">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="icon-wrapper">
+                            <i class="bi bi-download fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 text-white">Quick Downloads</h5>
+                            <small class="text-white-50">Export your data instantly</small>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{% url 'download_excel' %}" class="btn btn-excel" data-bs-toggle="tooltip" 
+                           data-bs-placement="top" title="Download complete placements data">
+                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                            <span>Placements Excel</span>
+                        </a>
+                        <a href="{% url 'download_placed_students_excel' %}" class="btn btn-excel" data-bs-toggle="tooltip" 
+                           data-bs-placement="top" title="Download placed students data">
+                            <i class="bi bi-people-fill me-2"></i>
+                            <span>Placed Students Excel</span>
                         </a>
                     </div>
                 </div>
             </div>
-            {% else %}
-                <div class="alert alert-warning mt-3">
-                    <i class="bi bi-exclamation-circle"></i> No posters are currently available for download.
+        </div>
+    </div>
+
+    <!-- Main Content Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="main-card shadow-lg">
+                <!-- Header -->
+                <div class="card-header-modern">
+                    <div class="header-content">
+                        <div class="header-icon">
+                            <i class="bi bi-collection"></i>
+                        </div>
+                        <div class="header-text">
+                            <h2 class="mb-1">Download Posters</h2>
+                            <p class="mb-0 opacity-75">Access and download college placement posters</p>
+                        </div>
+                    </div>
+                    <div class="header-decoration"></div>
                 </div>
-            {% endif %}
+
+                <div class="card-body p-0">
+                    {% if colleges %}
+                    <!-- Enhanced Tabs -->
+                    <div class="modern-tabs-container">
+                        <nav class="modern-tabs" id="downloadTab" role="tablist">
+                            <button class="tab-button active" id="individual-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#individual" type="button" role="tab" aria-controls="individual" 
+                                    aria-selected="true">
+                                <div class="tab-icon">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                </div>
+                                <div class="tab-content">
+                                    <span class="tab-title">Individual Download</span>
+                                    <span class="tab-subtitle">Select specific colleges</span>
+                                </div>
+                            </button>
+                            <button class="tab-button" id="all-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#all" type="button" role="tab" aria-controls="all" 
+                                    aria-selected="false">
+                                <div class="tab-icon">
+                                    <i class="bi bi-archive-fill"></i>
+                                </div>
+                                <div class="tab-content">
+                                    <span class="tab-title">Download All</span>
+                                    <span class="tab-subtitle">Get complete collection</span>
+                                </div>
+                            </button>
+                        </nav>
+                    </div>
+
+                    <!-- Tab Contents -->
+                    <div class="tab-content-container">
+                        <div class="tab-content" id="downloadTabContent">
+                            <!-- Individual Tab -->
+                            <div class="tab-pane fade show active" id="individual" role="tabpanel" 
+                                 aria-labelledby="individual-tab">
+                                <div class="individual-downloads p-4">
+                                    <div class="section-header mb-4">
+                                        <h4 class="section-title">Available College Posters</h4>
+                                        <p class="section-subtitle">Click download to get individual college posters</p>
+                                    </div>
+                                    
+                                    <div class="colleges-grid">
+                                        {% for college in colleges %}
+                                            {% if college.pdf %}
+                                            <div class="college-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+                                                <div class="college-card-inner">
+                                                    <div class="college-info">
+                                                        <div class="college-icon">
+                                                            <i class="bi bi-building"></i>
+                                                        </div>
+                                                        <div class="college-details">
+                                                            <h5 class="college-name">{{ college.name }}</h5>
+                                                            <span class="college-status">
+                                                                <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                                                Available
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="college-actions">
+                                                        <a href="{% url 'download_college_pdf' college.id %}" 
+                                                           class="btn-download" data-bs-toggle="tooltip" 
+                                                           data-bs-placement="top" title="Download {{ college.name }} poster">
+                                                            <i class="bi bi-download"></i>
+                                                            <span>Download</span>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <div class="college-card-glow"></div>
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- All Tab -->
+                            <div class="tab-pane fade" id="all" role="tabpanel" aria-labelledby="all-tab">
+                                <div class="bulk-download p-5">
+                                    <div class="bulk-download-content">
+                                        <div class="bulk-icon mb-4">
+                                            <i class="bi bi-box-arrow-down"></i>
+                                        </div>
+                                        <h3 class="bulk-title mb-3">Download All Posters</h3>
+                                        <p class="bulk-description mb-4">
+                                            Get all available college posters in a single ZIP file. 
+                                            Perfect for offline access and bulk distribution.
+                                        </p>
+                                        <div class="bulk-stats mb-4">
+                                            <div class="stat-item">
+                                                <span class="stat-number">{{ colleges|length }}</span>
+                                                <span class="stat-label">Total Colleges</span>
+                                            </div>
+                                            <div class="stat-divider"></div>
+                                            <div class="stat-item">
+                                                <span class="stat-number">PDF</span>
+                                                <span class="stat-label">Format</span>
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'download_all_college_pdfs' %}" class="btn-bulk-download">
+                                            <div class="btn-content">
+                                                <i class="bi bi-cloud-download me-2"></i>
+                                                <span>Download All Posters</span>
+                                            </div>
+                                            <div class="btn-glow"></div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Empty State -->
+                    <div class="empty-state p-5">
+                        <div class="empty-state-content">
+                            <div class="empty-icon mb-4">
+                                <i class="bi bi-inbox"></i>
+                            </div>
+                            <h3 class="empty-title mb-3">No Posters Available</h3>
+                            <p class="empty-description mb-4">
+                                There are currently no college posters available for download. 
+                                Please check back later or contact your administrator.
+                            </p>
+                            <button class="btn-refresh" onclick="window.location.reload()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>
+                                Refresh Page
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-   
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    --hover-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    --border-radius: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-    .nav-tabs .nav-link {
-        border-radius: 0.25rem 0.25rem 0 0;
+/* Action Bar */
+.action-bar {
+    background: var(--primary-gradient);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.btn-excel {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-excel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+    color: white;
+}
+
+/* Main Card */
+.main-card {
+    border: none;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background: white;
+    box-shadow: var(--card-shadow);
+}
+
+.card-header-modern {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+.header-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.header-text h2 {
+    font-weight: 700;
+    font-size: 1.75rem;
+}
+
+.header-decoration {
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* Modern Tabs */
+.modern-tabs-container {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modern-tabs {
+    display: flex;
+    gap: 1rem;
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.tab-button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition);
+    cursor: pointer;
+    text-align: left;
+}
+
+.tab-button.active {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.tab-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #667eea;
+}
+
+.tab-button.active .tab-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.tab-title {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.tab-subtitle {
+    display: block;
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+/* College Cards Grid */
+.section-header {
+    text-align: center;
+}
+
+.section-title {
+    color: #2d3748;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+    color: #718096;
+    margin-bottom: 0;
+}
+
+.colleges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.college-card {
+    background: white;
+    border-radius: var(--border-radius);
+    border: 1px solid #e2e8f0;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.college-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--hover-shadow);
+    border-color: #667eea;
+}
+
+.college-card-inner {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.college-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.college-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.college-name {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+}
+
+.college-status {
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+.btn-download {
+    background: var(--success-gradient);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+    color: white;
+}
+
+.college-card-glow {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-gradient);
+    transform: scaleX(0);
+    transition: var(--transition);
+}
+
+.college-card:hover .college-card-glow {
+    transform: scaleX(1);
+}
+
+/* Bulk Download */
+.bulk-download {
+    text-align: center;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bulk-download-content {
+    max-width: 500px;
+}
+
+.bulk-icon {
+    width: 100px;
+    height: 100px;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.bulk-title {
+    color: #2d3748;
+    font-weight: 700;
+    font-size: 2rem;
+}
+
+.bulk-description {
+    color: #718096;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.bulk-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #718096;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 40px;
+    background: #e2e8f0;
+}
+
+.btn-bulk-download {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.btn-bulk-download:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.btn-content {
+    position: relative;
+    z-index: 2;
+}
+
+.btn-glow {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.8s;
+}
+
+.btn-bulk-download:hover .btn-glow {
+    left: 100%;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: #f7fafc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 2rem;
+    color: #a0aec0;
+}
+
+.empty-title {
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.empty-description {
+    color: #718096;
+    line-height: 1.6;
+}
+
+.btn-refresh {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-refresh:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modern-tabs {
+        flex-direction: column;
     }
-
-    .list-group-item {
-        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    
+    .colleges-grid {
+        grid-template-columns: 1fr;
     }
-
-    .list-group-item:hover {
-        background-color: #e9f5ff;
-        box-shadow: 0 2px 10px rgba(0, 123, 255, 0.1);
+    
+    .college-card-inner {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
     }
-
-    .card-header h3 {
-        font-weight: 600;
+    
+    .bulk-stats {
+        flex-direction: column;
+        gap: 1rem;
     }
-
-    .nav-tabs .nav-link {
-        background-color: #2c2f33; /* Dark base */
-        color: #f1f1f1;
-        margin-right: 5px;
-        border-radius: 0.375rem 0.375rem 0 0;
-        transition: all 0.3s ease-in-out;
+    
+    .stat-divider {
+        display: none;
     }
-
-    .nav-tabs .nav-link:hover {
-        background-color: #343a40;
-        color: white;
+    
+    .action-bar .d-flex {
+        flex-direction: column;
+        text-align: center;
     }
+}
 
-    .nav-tabs .nav-link.active {
-        background-color: #0d6efd; /* Bootstrap primary */
-        color: #fff;
-        font-weight: 600;
-        border: none;
+/* Loading Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
-
-    .tab-content {
-        border: 1px solid #dee2e6;
-        border-top: none;
-        padding: 1rem;
-        border-radius: 0 0 0.375rem 0.375rem;
-        background-color: #ffffff;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
+}
 
-    .list-group-item {
-        transition: background-color 0.3s ease;
-    }
+.college-card {
+    animation: fadeInUp 0.6s ease-out;
+}
 
-    .list-group-item:hover {
-        background-color: #f8f9fa;
-    }
+/* Tooltip Enhancements */
+.tooltip .tooltip-inner {
+    background: #2d3748;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
 
-
+.tooltip .tooltip-arrow::before {
+    border-top-color: #2d3748;
+}
 </style>
+
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+    
+    // Add smooth scrolling for tab switches
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(function(tab) {
+        tab.addEventListener('shown.bs.tab', function (e) {
+            e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    });
+    
+    // Add download tracking (optional)
+    document.querySelectorAll('.btn-download, .btn-bulk-download').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            // Add a subtle loading state
+            this.style.opacity = '0.8';
+            setTimeout(() => {
+                this.style.opacity = '1';
+            }, 1000);
+        });
+    });
+});
+</script>
 {% endblock %}

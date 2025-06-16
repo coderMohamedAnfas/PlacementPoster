@@ -45,14 +45,7 @@
           </div>
           <div class="modal-body" id="mapHeadersBody">
             <div class="mb-3">
-              <label for="start_year" class="form-label">Start Year</label>
-              <input
-                type="date"
-                id="start_year"
-                name="start_year"
-                class="form-control"
-                value="{{ data.start_year|date:'Y-m-d' }}"
-                required>
+            
             </div>
             <!-- The rest of the dynamic dropdowns will be added here -->
           </div>
@@ -101,12 +94,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (data.success) {
         const headers = data.headers;
         const mapModalBody = document.getElementById("mapHeadersBody");
-mapModalBody.innerHTML = `
-  <div class="mb-3">
-    <label for="start_year" class="form-label fw-bold">Start Year</label>
-    <input type="date" id="start_year" name="start_year" class="form-control" required>
-  </div>
-`;
+
 
 
         const fields = ["name_field", "prn_field", "department_field", "image_field"];

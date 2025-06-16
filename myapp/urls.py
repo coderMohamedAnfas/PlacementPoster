@@ -24,7 +24,7 @@ urlpatterns = [
 path('send-sheet-link/', views.send_email, name='sheet_link'),
     path('validate-prn/', views.validate_prn, name='validate_prn'),
      path('manage-college/', views.manage_colleges, name='manage_colleges'),
-path('common-data/', views.manage_common_data, name='common_data'),
+# path('common-data/', views.manage_common_data, name='common_data'),
 
      path('download-posters/', views.download_posters_page, name='download_posters'),
     # path('download-poster/<int:poster_id>/', views.download_individual_poster, name='download_individual_poster'),
@@ -37,6 +37,10 @@ path('delete-college/<int:college_id>/', views.delete_college, name='delete_coll
    path('verify_and_fetch_data',views.fetch_google_sheet_data,name="verify_and_fetch_data"),
 
 path('students/', views.student_list, name='student_list'),
+# urls.py
+path('upload-companies/', views.upload_companies_excel, name='upload_companies'),
+# urls.py
+path('download-placed-students/', views.download_placed_students_excel, name='download_placed_students_excel'),
 
  path('students/edit/<int:pk>/', views.edit_student, name='edit_student'),
  path('students/update-photo/<int:pk>/', views.update_photo, name='update_photo'),
@@ -53,7 +57,7 @@ path('students/', views.student_list, name='student_list'),
     path('companies/add-company/', views.add_company_post, name='add_company_post'),
      path('companies/edit/<int:company_id>/', views.edit_company_post, name='edit_company_post'),
     path('companies/delete/<int:company_id>/', views.delete_company, name='delete_company'),
-    # path('download-placements/', views.download_excel, name='download_excel'),s
+    path('download-placements/', views.download_excel, name='download_excel'),
 path('download-poster-pdf/', views.download_placement_pdf, name='download_poster_pdf'),
     path('CollegeWiseCompanies/', views.company_students_view, name='company_students'),
     path('companies/<int:company_id>/students/', views.get_students_for_company, name='get_students_for_company'),

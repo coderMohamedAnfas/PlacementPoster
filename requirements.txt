@@ -7,3 +7,4 @@ requests>=2.25.0
 
 # psycopg with binary distribution for PostgreSQL support
 psycopg2-binary==2.9.9
+openpyxl

@@ -3,3 +3,4 @@
 __pycache__
 postgres_data
 credentials/credentials.json
+media/

@@ -144,7 +144,7 @@
           <div class="modal-body">
             <div class="mb-3">
               <label for="start_year" class="form-label">Start Year</label>
-              <input type="date" class="form-control" id="start_year" name="start_year" required>
+              <input type="date" class="form-control" id="start_year" name="start_year"  value="{{ data.start_year|date:'Y-m-d' }}"required>
             </div>
           </div>
           <div class="modal-footer">

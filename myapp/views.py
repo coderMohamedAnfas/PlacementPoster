@@ -928,8 +928,11 @@ def generate_poster_pdf(request):
 
     # Get common data
     cd = CommonData.objects.first()
-    start_year, end_year = Year.objects.values_list('start_year__year', 'end_year__year').first()
 
+    # start_year, end_year = Year.objects.values_list('start_year__year', 'end_year__year').first()
+    year = Year.get_solo()
+    start_year = year.start_year
+    end_year = year.end_year
     # Fetch poster for the logged-in college
     placements = PlacementData.objects.filter(college=request.user).select_related('student', 'company')
     if not placements.exists():
@@ -1796,18 +1799,30 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 
-@login_required
-@csrf_exempt
+# views.py
+
+from django.http import JsonResponse
+from datetime import datetime
+from .models import Year
+
 def add_year(request):
     if request.method == "POST":
         start_year_str = request.POST.get("start_year")
+
         try:
             start_date = datetime.strptime(start_year_str, '%Y-%m-%d').date()
-            year_obj = Year(start_year=start_date)
+
+            # Get or create the singleton Year instance
+            year_obj = Year.get_solo()
+            year_obj.start_year = start_date
             year_obj.save()
+
             return JsonResponse({"success": True, "message": "Year saved successfully."})
+
         except Exception as e:
             return JsonResponse({"success": False, "message": str(e)})
+
+    return JsonResponse({"success": False, "message": "Invalid request method."})
 
 
 

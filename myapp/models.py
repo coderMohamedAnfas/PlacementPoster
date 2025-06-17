@@ -97,20 +97,28 @@ class CommonData(models.Model):
 
     
 
-# models.py
+## models.py
+
 from django.db import models
 
 class Year(models.Model):
-    start_year = models.DateField(null=True)
+    start_year = models.DateField(null=True,unique=True)
     end_year = models.DateField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
+        # Automatically set end_year
         if self.start_year:
             self.end_year = self.start_year.replace(year=self.start_year.year + 1)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.start_year.year} - {self.end_year.year if self.end_year else 'N/A'}"
+
+    @classmethod
+    def get_solo(cls):
+        # Always return the only Year instance, or create one if missing
+        return cls.objects.first() or cls.objects.create()
+
 
 
 class Company(models.Model):

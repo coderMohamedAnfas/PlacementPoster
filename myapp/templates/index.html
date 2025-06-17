@@ -16,9 +16,10 @@
     </div>
     {% else %}
     <div class="text-center mt-4">
-        <a class="btn btn-enhanced btn-success-enhanced btn-lg" href="{% url 'generate_poster' %}" data-loader>
+        <a href="#" id="generatePosterBtn" class="btn btn-enhanced btn-success-enhanced btn-lg">
             <i class="fas fa-rocket"></i> Generate Poster
         </a>
+        
         {% if pdf %}
 <div class="action-buttons mt-4">
     <a class="btn btn-enhanced btn-secondary-enhanced btn-lg" href="{% url 'download_poster_pdf' %}" data-loader>
@@ -344,7 +345,52 @@
         }
     }
 </style>
-
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const generateBtn = document.getElementById('generatePosterBtn');
+        const loader = document.getElementById('loader-overlay');
+    
+        if (generateBtn) {
+            generateBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+    
+                // Show loader
+                loader.style.display = 'flex';
+    
+                fetch("{% url 'generate_poster' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // Adjust if your response is not JSON
+                })
+                .then(data => {
+                    // Hide loader
+                    loader.style.display = 'none';
+    
+                    // Optionally redirect or update UI
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Poster generation failed.');
+                    }
+                })
+                .catch(error => {
+                    loader.style.display = 'none';
+                    alert('Error: ' + error.message);
+                });
+            });
+        }
+    });
+    </script>
+    
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const loader = document.getElementById('loader-overlay');

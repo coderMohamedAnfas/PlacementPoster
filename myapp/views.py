@@ -1165,7 +1165,8 @@ def generate_poster_pdf(request):
     # response = HttpResponse(buffer, content_type="application/pdf")
     # response["Content-Disposition"] = "inline; filename=placement_poster.pdf"  # Use 'inline' to show in iframe
     messages.info(request,"Poster Generated Successfully")
-    return redirect("index")
+    # return redirect("index")
+    return JsonResponse({'success': True})
 
 
 from django.core.files.base import ContentFile

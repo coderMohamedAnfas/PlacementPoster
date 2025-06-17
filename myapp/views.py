@@ -937,7 +937,8 @@ def generate_poster_pdf(request):
     college_name = College.objects.get(email=request.user.email).name
     from collections import defaultdict
     company_to_students = defaultdict(list)
-    
+    placements = sorted(placements, key=lambda p: p.company.lpa if p.company and p.company.lpa else 0, reverse=True)
+
     for placement in placements:
         lpa = placement.company.lpa
         key = placement.company.name

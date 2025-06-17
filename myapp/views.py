@@ -439,7 +439,7 @@ from django.core.mail import send_mail
 from django.shortcuts import redirect
 from django.contrib import messages
 from .models import College,Year
-y = Year.objects.first()
+# y = Year.objects.first()
 # def manage_common_data(request):
 #     data = CommonData.objects.first()  # Assuming there's only one entry at a time
 
@@ -921,7 +921,6 @@ def get_company_colors(index):
     # Return a color pair based on the index
     return company_colors[index % len(company_colors)]
 
-start_year, end_year = Year.objects.values_list('start_year__year', 'end_year__year').first()
 
 def generate_poster_pdf(request):
     if not request.user.is_authenticated:
@@ -929,6 +928,7 @@ def generate_poster_pdf(request):
 
     # Get common data
     cd = CommonData.objects.first()
+    start_year, end_year = Year.objects.values_list('start_year__year', 'end_year__year').first()
 
     # Fetch poster for the logged-in college
     placements = PlacementData.objects.filter(college=request.user).select_related('student', 'company')

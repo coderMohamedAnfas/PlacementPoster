@@ -216,7 +216,8 @@
 
         /* Enhanced Container */
         .container {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.3);
+            
             border-radius: 20px;
             padding: 40px;
             box-shadow: var(--shadow-dark);
@@ -604,7 +605,7 @@
         {% endif %}
 
         <!-- Enhanced Main Content -->
-        <div class="container mt-4">
+        <!-- <div class="container mt-4"> -->
             {% block content %}
             <div class="text-center py-5">
                 <h1 class="display-4 mb-4">Welcome to Admin Dashboard</h1>
@@ -614,7 +615,7 @@
                 </button>
             </div>
             {% endblock %}
-        </div>
+        <!-- </div> -->
     </div>
 
     <script>

@@ -1,17 +1,18 @@
 {% extends "page.html" %}
 
 {% block content %}
-  <div class="d-flex flex-row-reverse mb-3">
-  
-<button type="button" class="btn btn-success float-right" data-bs-toggle="modal" data-bs-target="#addPlacementModal">
-    <i class="bi bi-plus-circle"></i> Add Placement Entry
-  </button>
-  <a href="{% url 'download_all_photos' %}" id="downloadPhotosBtn" class="btn btn-info btn-glow">
-    <span class="btn-text">Download All Photos</span>
-    <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
-</a>
 
-</div>
+<div class="d-flex flex-row-reverse mt-1 mb-3">
+    <a href="{% url 'download_all_photos' %}" id="downloadPhotosBtn" class="btn btn-info btn-glow ms-3">
+        <span class="btn-text">Download All Photos</span>
+        <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+      </a>  
+    <button type="button" class="btn btn-success float-right" data-bs-toggle="modal" data-bs-target="#addPlacementModal">
+      <i class="bi bi-plus-circle"></i> Add Placement Entry
+    </button>
+  
+  </div>
+  
 <!-- Loading Overlay -->
 <div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center" style="z-index: 1055;">
     <div class="text-center text-white">
@@ -570,9 +571,9 @@ document.getElementById("downloadPhotosBtn").addEventListener("click", function 
             if (data.success) {
                 let msg = `✅ Downloaded: ${data.downloaded}`;
                 if (data.failed.length > 0) {
-                    msg += `<br>⚠️ Failed: ${data.failed.length}<br><h3 class="text-white">${data.failed.join('<br>')}</h3>`;
+                    msg += `<br>⚠️ Failed: ${data.failed.length}<br><ins class="text-white">${data.failed.join('<br>')}</ins>`;
                     toastEl.classList.remove('text-bg-success');
-                    toastEl.classList.add('text-bg-warning');
+                    toastEl.classList.add('text-bg-info');
                 } else {
                     toastEl.classList.remove('text-bg-warning');
                     toastEl.classList.add('text-bg-success');

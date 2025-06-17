@@ -1170,7 +1170,8 @@ from django.core.files.base import ContentFile
 
 def download_posters_page(request):
     colleges = College.objects.filter(is_superuser=False)
-    return render(request, 'admin_user/download_posters.html', {'colleges': colleges})
+    countColleges = College.objects.exclude(pdf='').count()
+    return render(request, 'admin_user/download_posters.html', {'colleges': colleges,'count':countColleges})
 
 import os
 import zipfile
@@ -1659,8 +1660,8 @@ def company_students_view(request):
     print(college)
     # Get distinct companies for this college from PlacementData
     companies = Company.objects.filter(
-        placementdata__college=college
-    ).distinct()
+                  placementdata__college=college).distinct().order_by('-lpa')  # ascending order
+
 
     context = {
         "companies": companies,

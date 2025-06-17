@@ -23,8 +23,9 @@ def index(request):
     # college = College.objects.filter(request.user)  # Assuming `user` is linked to a college
     is_have_sheet = bool( request.user.sheet_url)
     college = College.objects.get(email=request.user.email)
+    pdf = bool(college.pdf)
     has_poster = True#Poster.objects.filter(college=college).exists()
-    return render(request, 'index.html',{"is_have_sheet": not is_have_sheet,'name':request.user.name.upper(),'college':college,'has_poster':has_poster})
+    return render(request, 'index.html',{"is_have_sheet": not is_have_sheet,'name':request.user.name.upper(),'college':college,'has_poster':has_poster,'pdf':pdf})
 
 
 
@@ -1307,7 +1308,11 @@ def delete_poster(request):
         college = request.user
         
         # Delete the poster for the current college
-        college.pdf.delete(save=False)
+        # college.pdf.delete(save=False)
+        if college.pdf:
+            college.pdf.delete()  # Remove the file
+            college.pdf = None
+            college.save() 
         messages.success(request, "Your poster has been deleted successfully.")
         return redirect('index')
     

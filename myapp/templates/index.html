@@ -14,22 +14,25 @@
             <i class="fas fa-upload"></i> Add Google Sheet or Excel File
         </a>
     </div>
-
     {% else %}
     <div class="text-center mt-4">
-        <div class="action-buttons">
-            <a class="btn btn-enhanced btn-success-enhanced btn-lg" href="{% url 'generate_poster' %}" data-loader>
-                <i class="fas fa-rocket"></i> Generate Poster
-            </a>
-            
-            <a class="btn btn-enhanced btn-secondary-enhanced btn-lg" href="{% url 'download_poster_pdf' %}" data-loader>
-                <i class="fas fa-download"></i> Download Poster
-            </a>
-            
-            <button class="btn btn-enhanced btn-danger-enhanced btn-lg" data-bs-toggle="modal" data-bs-target="#deletePosterModal">
-                <i class="fas fa-trash-alt"></i> Delete Poster
-            </button>
-        </div>
+        <a class="btn btn-enhanced btn-success-enhanced btn-lg" href="{% url 'generate_poster' %}" data-loader>
+            <i class="fas fa-rocket"></i> Generate Poster
+        </a>
+        {% if pdf %}
+<div class="action-buttons mt-4">
+    <a class="btn btn-enhanced btn-secondary-enhanced btn-lg" href="{% url 'download_poster_pdf' %}" data-loader>
+        <i class="fas fa-download"></i> Download Poster
+    </a>
+    
+    <button class="btn btn-enhanced btn-danger-enhanced btn-lg" data-bs-toggle="modal" data-bs-target="#deletePosterModal">
+        <i class="fas fa-trash-alt"></i> Delete Poster
+    </button>
+</div>
+{% else %}
+<p class="text-muted mt-4">Please generate the poster first to enable downloading and deletion.</p>
+{% endif %}
+
     </div>
     {% endif %}
 </div>

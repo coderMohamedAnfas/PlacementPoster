@@ -931,8 +931,8 @@ def generate_poster_pdf(request):
 
     # start_year, end_year = Year.objects.values_list('start_year__year', 'end_year__year').first()
     year = Year.get_solo()
-    start_year = year.start_year
-    end_year = year.end_year
+    start_year = year.start_year.year
+    end_year = year.end_year.year
     # Fetch poster for the logged-in college
     placements = PlacementData.objects.filter(college=request.user).select_related('student', 'company')
     if not placements.exists():
@@ -1750,8 +1750,10 @@ from .models import Student, PlacementData
 def download_all_placed_photos(request):
     college = request.user  # Assuming College is the logged-in user
     placed_students = Student.objects.filter(
-        id__in=PlacementData.objects.filter(college=college).values_list('student_id', flat=True)
-    )
+    id__in=PlacementData.objects.filter(college=college).values_list('student_id', flat=True),
+    is_photo=False
+)
+
 
     success_count = 0
     failed = []

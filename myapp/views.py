@@ -437,46 +437,46 @@ from datetime import datetime, timezone
 from django.core.mail import send_mail
 from django.shortcuts import redirect
 from django.contrib import messages
-from .models import College
+from .models import College,Year
+y = Year.objects.first()
+# def manage_common_data(request):
+#     data = CommonData.objects.first()  # Assuming there's only one entry at a time
 
-def manage_common_data(request):
-    data = CommonData.objects.first()  # Assuming there's only one entry at a time
+#     if request.method == "POST":
+#         start_year = request.POST.get("start_year")
+#         prn_field = request.POST.get("prn_field")
+#         image_field = request.POST.get("image_field")
+#         name_field = request.POST.get("name_field")
+#         department_field = request.POST.get("department_field")
 
-    if request.method == "POST":
-        start_year = request.POST.get("start_year")
-        prn_field = request.POST.get("prn_field")
-        image_field = request.POST.get("image_field")
-        name_field = request.POST.get("name_field")
-        department_field = request.POST.get("department_field")
+#         try:
+#             # Convert start_year string to a datetime.date object
+#             start_year_date = datetime.strptime(start_year, "%Y-%m-%d").date()
+#         except ValueError:
+#             messages.error(request, "Invalid start year format. Use YYYY-MM-DD.")
+#             return redirect("common_data")
 
-        try:
-            # Convert start_year string to a datetime.date object
-            start_year_date = datetime.strptime(start_year, "%Y-%m-%d").date()
-        except ValueError:
-            messages.error(request, "Invalid start year format. Use YYYY-MM-DD.")
-            return redirect("common_data")
+#         if data:  # Update existing CommonData
+#             data.start_year = start_year_date
+#             data.prn_field = prn_field
+#             data.image_field = image_field
+#             data.name_field = name_field
+#             data.department_field = department_field
+#             data.save()
+#             messages.success(request, "Common data updated successfully.")
+#         else:  # Create new CommonData
+#             CommonData.objects.create(
+#                 start_year=start_year_date,
+#                 prn_field=prn_field,
+#                 image_field=image_field,
+#                 name_field=name_field,
+#                 department_field=department_field,
+#             )
+#             messages.success(request, "Common data created successfully.")
 
-        if data:  # Update existing CommonData
-            data.start_year = start_year_date
-            data.prn_field = prn_field
-            data.image_field = image_field
-            data.name_field = name_field
-            data.department_field = department_field
-            data.save()
-            messages.success(request, "Common data updated successfully.")
-        else:  # Create new CommonData
-            CommonData.objects.create(
-                start_year=start_year_date,
-                prn_field=prn_field,
-                image_field=image_field,
-                name_field=name_field,
-                department_field=department_field,
-            )
-            messages.success(request, "Common data created successfully.")
+#         return redirect("common_data")
 
-        return redirect("common_data")
-
-    return render(request, "admin_user/common_data.html", {"data": data})
+#     return render(request, "admin_user/common_data.html", {"data": data})
 
 
 
@@ -920,6 +920,7 @@ def get_company_colors(index):
     # Return a color pair based on the index
     return company_colors[index % len(company_colors)]
 
+start_year, end_year = Year.objects.values_list('start_year__year', 'end_year__year').first()
 
 def generate_poster_pdf(request):
     if not request.user.is_authenticated:
@@ -995,11 +996,11 @@ def generate_poster_pdf(request):
         pdf.line(110, page_height - 93, page_width - 33, page_height - 93)
         pdf.setFillColorRGB(0, 0, 0.15)  # Deep Navy
         pdf.setFont("Helvetica-Bold", 16)
-        pdf.drawCentredString(page_width / 2, page_height - 113, f"CAMPUS PLACEMENT OFFER DETAILS {cd.start_year.year} - {cd.end_year.year}")
+        pdf.drawCentredString(page_width / 2, page_height - 113, f"CAMPUS PLACEMENT OFFER DETAILS {start_year} - {end_year}")
         # pdf.line(30, page_height - 155, page_width - 30, page_height - 155)
         pdf.line(30, page_height - 123, page_width - 30, page_height - 123)
 
-        
+    
         pdf.setFillColorRGB(244, 0, 0.15)
         pdf.setFont("GB", 23)
         pdf.drawCentredString(page_width / 2, page_height - 147, f"Congratulations On Your Placement")
@@ -1722,6 +1723,96 @@ def download_student_photo(request, student_id):
 
 
 
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.conf import settings
+from django.shortcuts import get_object_or_404
+import os
+import requests
+
+from .models import Student, PlacementData
+
+
+
+@login_required
+def download_all_placed_photos(request):
+    college = request.user  # Assuming College is the logged-in user
+    placed_students = Student.objects.filter(
+        id__in=PlacementData.objects.filter(college=college).values_list('student_id', flat=True)
+    )
+
+    success_count = 0
+    failed = []
+
+    for student in placed_students:
+        photo_url = student.photo_url
+        if not photo_url:
+            failed.append(f"{student.name} - No URL")
+            continue
+
+        try:
+            response = requests.get(transform_google_drive_url(photo_url), stream=True, timeout=10)
+            if response.status_code == 200 and 'image' in response.headers.get('Content-Type', ''):
+                filename = f"{student.prn}_photo.jpg"
+                file_path = os.path.join(settings.MEDIA_ROOT, 'student_photos', filename)
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+                with open(file_path, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+
+                student.photo = f'student_photos/{filename}'
+                student.is_photo = True
+                student.save()
+                success_count += 1
+            else:
+                failed.append(f"{student.name} - Invalid content")
+        except Exception as e:
+            failed.append(f"{student.name} - Error: {str(e)}")
+
+    return JsonResponse({
+        'success': True,
+        'downloaded': success_count,
+        'failed': failed,
+    })
+
+
+
+
+# views.py
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from .models import Year
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from datetime import datetime
+
+@login_required
+@csrf_exempt
+def add_year(request):
+    if request.method == "POST":
+        start_year_str = request.POST.get("start_year")
+        try:
+            start_date = datetime.strptime(start_year_str, '%Y-%m-%d').date()
+            year_obj = Year(start_year=start_date)
+            year_obj.save()
+            return JsonResponse({"success": True, "message": "Year saved successfully."})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)})
+
+
+
+
+
+
+
+
+
+
+
+
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -1845,10 +1936,10 @@ def map_sheet_headers(request):
             department_field = request.POST.get("department_field")
             prn_field = request.POST.get("prn_field")
             image_field = request.POST.get("image_field")
-            start_year_str = request.POST.get("start_year")
+            # start_year_str = request.POST.get("start_year")
 
             # Parse and validate start year
-            start_year = datetime.strptime(start_year_str, "%Y-%m-%d").date()
+            # start_year = datetime.strptime(start_year_str, "%Y-%m-%d").date()
 
             sheet_url = request.session.get("sheet_url")
             if sheet_url:
@@ -1859,7 +1950,7 @@ def map_sheet_headers(request):
             CommonData.objects.update_or_create(
                 college=college,
                 defaults={
-                    "start_year": start_year,
+                    # "start_year": start_year,
                     "name_field": name_field,
                     "department_field": department_field,
                     "prn_field": prn_field,

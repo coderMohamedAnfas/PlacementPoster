@@ -9,6 +9,8 @@ urlpatterns = [
     # path('poster/<int:poster_id>/download/', views.download_poster, name='download_poster'),
 
     path('poster/download/',views.generate_poster_pdf, name='generate_poster'),
+# urls.py
+path('download-placed-photos/', views.download_all_placed_photos, name='download_all_photos'),
 
 
 
@@ -70,6 +72,8 @@ path('add-student/', views.add_student, name='add_student'),
 
 
  path('get-sheet-headers/', views.get_sheet_headers, name='get_sheet_headers'),
+# urls.py
+path('add-year/', views.add_year, name='add_year'),
 
     # Endpoint to process header mapping and save CommonData
     path('map-sheet-headers/', views.map_sheet_headers, name='map_headers_and_import'),

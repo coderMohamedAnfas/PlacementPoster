@@ -9,7 +9,9 @@
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCollegeModal">
         Add College
     </button>
-
+    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#yearModal">
+        Add Academic Year
+      </button>
     <!-- Colleges Table -->
     <table class="table mt-3">
         <thead>
@@ -126,6 +128,57 @@
         </div>
     {% endfor %}
 
+    <!-- Trigger Button -->
+
+  
+  <!-- Modal -->
+  <div class="modal fade" id="yearModal" tabindex="-1" aria-labelledby="yearModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="yearForm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="yearModalLabel">Add Academic Year</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="start_year" class="form-label">Start Year</label>
+              <input type="date" class="form-control" id="start_year" name="start_year" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- AJAX Script -->
+  <script>
+  document.getElementById("yearForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+  
+      fetch("{% url 'add_year' %}", {
+          method: "POST",
+          headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+          },
+          body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (data.success) {
+              alert("Year added successfully!");
+              location.reload(); // or update a table dynamically
+          } else {
+              alert("Error: " + data.message);
+          }
+      });
+  });
+  </script>
+  
     <!-- JavaScript to Toggle Forms -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {

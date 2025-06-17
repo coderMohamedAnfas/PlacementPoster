@@ -89,19 +89,30 @@ from datetime import timedelta
 
 class CommonData(models.Model):
     college = models.ForeignKey(College, on_delete=models.CASCADE,null=True)
-    start_year = models.DateField(null=True)  # Admin provides the start year
-    end_year = models.DateField(blank=True, null=True)  # Calculated field
+    
     prn_field = models.CharField(max_length=255, blank=True)
     image_field = models.CharField(max_length=255, blank=True)
     name_field = models.CharField(max_length=255,null=True)
     department_field = models.CharField(max_length=255,null=True)
+
+    
+
+# models.py
+from django.db import models
+
+class Year(models.Model):
+    start_year = models.DateField(null=True)
+    end_year = models.DateField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if self.start_year:
             self.end_year = self.start_year.replace(year=self.start_year.year + 1)
         super().save(*args, **kwargs)
 
-    
+    def __str__(self):
+        return f"{self.start_year.year} - {self.end_year.year if self.end_year else 'N/A'}"
+
+
 class Company(models.Model):
     name = models.CharField(max_length=50,unique=True,null=True)
     lpa = models.DecimalField(max_digits=5, decimal_places=2)  # Adjust max_digits as needed

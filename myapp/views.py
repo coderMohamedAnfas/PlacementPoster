@@ -404,7 +404,7 @@ def delete_college(request, college_id):
 
 def manage_colleges(request):
     colleges = College.objects.all()
-
+    year_obj = Year.get_solo()
     if request.method == "POST":
         action = request.POST.get("action")
         college_id = request.POST.get("college_id")
@@ -428,7 +428,7 @@ def manage_colleges(request):
                     messages.error(request, str(e))
         return redirect('manage_colleges')
 
-    return render(request, 'admin_user/manage_colleges.html', {'colleges': colleges})
+    return render(request, 'admin_user/manage_colleges.html', {'colleges': colleges ,'date':year_obj.start_year})
 
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -1714,14 +1714,38 @@ def download_student_photo(request, student_id):
 
     try:
         response = requests.get(transform_google_drive_url(photo_url), stream=True, timeout=10)
-        if response.status_code == 200 and 'image' in response.headers.get('Content-Type', ''):
-            filename = f"{student.prn}_photo.jpg"
-            file_path = os.path.join(settings.MEDIA_ROOT, 'student_photos', filename)
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        file_bytes = response.content
 
-            with open(file_path, 'wb') as f:
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
+        # Check if PDF by checking first few bytes
+        if file_bytes.startswith(b"%PDF"):
+            # Convert PDF to image (first page)
+            images = convert_from_bytes(file_bytes, first_page=1, last_page=1)
+            if images:
+                save_dir = os.path.join(settings.MEDIA_ROOT, 'student_photos')
+                os.makedirs(save_dir, exist_ok=True)
+
+                filename = f"{student.prn}_photo.jpg"
+                image_path = os.path.join(save_dir, filename)
+                images[0].save(image_path, 'JPEG')
+
+                student.photo = f'student_photos/{filename}'
+                student.is_photo = True
+                student.save()
+                success_count += 1
+            else:
+                pass
+
+        # Otherwise, check if it's an image using imghdr
+        image_type = imghdr.what(None, h=file_bytes)
+        if image_type:
+            save_dir = os.path.join(settings.MEDIA_ROOT, 'student_photos')
+            os.makedirs(save_dir, exist_ok=True)
+
+            filename = f"{student.prn}_photo.{image_type}"
+            image_path = os.path.join(save_dir, filename)
+
+            with open(image_path, 'wb') as f:
+                f.write(file_bytes)
 
             student.photo = f'student_photos/{filename}'
             student.is_photo = True
@@ -1744,16 +1768,24 @@ import requests
 
 from .models import Student, PlacementData
 
-
+from pdf2image import convert_from_bytes
+from PIL import Image
+import imghdr
+from django.http import JsonResponse
+import os
+import requests
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from .models import Student, PlacementData
+# from .utils import transform_google_drive_url  # Adjust if needed
 
 @login_required
 def download_all_placed_photos(request):
-    college = request.user  # Assuming College is the logged-in user
+    college = request.user
     placed_students = Student.objects.filter(
-    id__in=PlacementData.objects.filter(college=college).values_list('student_id', flat=True),
-    is_photo=False
-)
-
+        id__in=PlacementData.objects.filter(college=college).values_list('student_id', flat=True),
+        is_photo=False
+    )
 
     success_count = 0
     failed = []
@@ -1766,21 +1798,47 @@ def download_all_placed_photos(request):
 
         try:
             response = requests.get(transform_google_drive_url(photo_url), stream=True, timeout=10)
-            if response.status_code == 200 and 'image' in response.headers.get('Content-Type', ''):
-                filename = f"{student.prn}_photo.jpg"
-                file_path = os.path.join(settings.MEDIA_ROOT, 'student_photos', filename)
-                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            file_bytes = response.content
 
-                with open(file_path, 'wb') as f:
-                    for chunk in response.iter_content(1024):
-                        f.write(chunk)
+            # Check if PDF by checking first few bytes
+            if file_bytes.startswith(b"%PDF"):
+                # Convert PDF to image (first page)
+                images = convert_from_bytes(file_bytes, first_page=1, last_page=1)
+                if images:
+                    save_dir = os.path.join(settings.MEDIA_ROOT, 'student_photos')
+                    os.makedirs(save_dir, exist_ok=True)
+
+                    filename = f"{student.prn}_photo.jpg"
+                    image_path = os.path.join(save_dir, filename)
+                    images[0].save(image_path, 'JPEG')
+
+                    student.photo = f'student_photos/{filename}'
+                    student.is_photo = True
+                    student.save()
+                    success_count += 1
+                else:
+                    failed.append(f"{student.name} - PDF conversion failed")
+                continue
+
+            # Otherwise, check if it's an image using imghdr
+            image_type = imghdr.what(None, h=file_bytes)
+            if image_type:
+                save_dir = os.path.join(settings.MEDIA_ROOT, 'student_photos')
+                os.makedirs(save_dir, exist_ok=True)
+
+                filename = f"{student.prn}_photo.{image_type}"
+                image_path = os.path.join(save_dir, filename)
+
+                with open(image_path, 'wb') as f:
+                    f.write(file_bytes)
 
                 student.photo = f'student_photos/{filename}'
                 student.is_photo = True
                 student.save()
                 success_count += 1
             else:
-                failed.append(f"{student.name} - Invalid content")
+                failed.append(f"{student.name} - Unsupported file format")
+
         except Exception as e:
             failed.append(f"{student.name} - Error: {str(e)}")
 

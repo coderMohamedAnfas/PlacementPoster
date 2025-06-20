@@ -1731,7 +1731,7 @@ def download_student_photo(request, student_id):
                 student.photo = f'student_photos/{filename}'
                 student.is_photo = True
                 student.save()
-                success_count += 1
+                # success_count += 1
             else:
                 pass
 

@@ -1,0 +1,338 @@
+{% extends "page.html" %}
+{% block content %}
+<div class="container mt-5">
+    {% if  not has_sheet %}
+    <div class="text-center mb-5">
+        <h1 class="text-primary fw-bold">Welcome, {{ college.name }}!</h1>
+        <p class="text-muted">
+            To get started with generating posters, you'll need to upload student data via a Google Sheet link or an Excel file.
+        </p>
+        <p class="text-success fw-semibold">
+            Don't worry — it's quick and easy!
+        </p>
+        <p class="text-danger fw-bold">
+            Please upload your student list to proceed.
+        </p>
+        <a href="{% url 'student_list' %}" class="btn btn-primary btn-lg btn-glow">
+            <i class="fas fa-plus-circle"></i> Go to Students Tab to Add Google Sheet or Excel File
+        </a>
+    </div>
+    
+    {% else %}
+    <form method="POST" action="{% url 'add_placement' %}">
+        {% csrf_token %}
+        <div class="accordion" id="companiesAccordion">
+            <!-- Initial Company Block -->
+            <div class="accordion-item company-block mb-3 border-start border-4 border-primary shadow">
+                <h2 class="accordion-header">
+                    <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#company-0">
+                        Company #1
+                    </button>
+                </h2>
+                <div id="company-0" class="accordion-collapse collapse show">
+                    <div class="accordion-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Select Company</label>
+                            <select class="form-select" name="companies[]" required>
+                                <option value="" disabled selected>Select a company</option>
+                                {% for company in companies %}
+                                    <option value="{{ company.id }}">{{ company.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="student-prns">
+                            <label class="form-label text-secondary fw-bold">Students (PRNs)</label>
+                            <div class="input-group mb-2 student-prn-group">
+                                <!-- <input type="text" class="form-control student-prn" name="prns[0][]" placeholder="Enter PRN" required data-company-index="0"> -->
+                                <input type="text" class="form-control student-prn" name="prns[0][]" placeholder="Enter PRN" required data-company-index="0" data-suggest-id="prn-0-0">
+
+                                <button type="button" class="btn btn-outline-danger remove-prn">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm add-student-prn mt-2">
+                            <i class="bi bi-node-plus-fill"></i>Add Student
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-company mt-2 float-end">
+                            <i class="fas fa-trash-alt"></i> Remove Company
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Company Button -->
+        <div class="text-center my-4">
+            <button type="button" id="add-company" class="btn btn-outline-success btn-lg btn-glow">
+                <i class="bi bi-node-plus"></i> Add Another Company
+            </button>
+        </div>
+
+        <div class="text-center mt-5">
+            <button type="submit" name="preview" class="btn btn-success btn-lg btn-glow">
+                <i class="bi bi-upload"></i> Add Placements
+            </button>
+            <a class="btn btn-warning btn-lg btn-glow" href="{% url 'download_poster' %}">
+                <i class="bi bi-download"></i> Download Poster
+            </a>
+            {% if has_poster %}
+                <button class="btn btn-danger btn-glow" data-bs-toggle="modal" data-bs-target="#deletePosterModal">
+                    🗑️ Delete Poster
+                </button>
+            {% endif %}
+        </div>
+        
+      
+    </form>
+    {% endif %}
+</div>
+
+<!-- Bootstrap & Font Awesome -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+<!-- Styling -->
+<style>
+    .btn-glow {
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        transition: all 0.2s ease-in-out;
+    }
+    .btn-glow:hover {
+        box-shadow: 0 6px 20px rgba(0, 123, 255, 0.35);
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: #0d6efd;
+    }
+    .company-block {
+        border-radius: 10px;
+    }
+    input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 4px #0d6efd;
+    }
+</style>
+
+<!-- JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let companyIndex = 1;
+
+        const accordion = document.getElementById('companiesAccordion');
+
+        document.getElementById('add-company').addEventListener('click', () => {
+            const id = `company-${companyIndex}`;
+            const card = `
+                <div class="accordion-item company-block mb-3 border-start border-4 border-primary shadow">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#${id}">
+                            Company #${companyIndex + 1}
+                        </button>
+                    </h2>
+                    <div id="${id}" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Select Company</label>
+                                <select class="form-select" name="companies[]" required>
+                                    <option value="" disabled selected>Select a company</option>
+                                    {% for company in companies %}
+                                        <option value="{{ company.id }}">{{ company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="student-prns">
+                                <label class="form-label text-secondary fw-bold">Students (PRNs)</label>
+                                <div class="input-group mb-2 student-prn-group">
+                                    <input type="text" class="form-control student-prn" name="prns[${companyIndex}][]" placeholder="Enter PRN" required data-company-index="${companyIndex}">
+                                    <button type="button" class="btn btn-outline-danger remove-prn">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm add-student-prn mt-2">
+                                <i class="fas fa-user-plus"></i> Add Student
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-company mt-2 float-end">
+                                <i class="fas fa-trash-alt"></i> Remove Company
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            accordion.insertAdjacentHTML('beforeend', card);
+            companyIndex++;
+        });
+
+        accordion.addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            // Add PRN
+            if (btn.classList.contains('add-student-prn')) {
+                const block = btn.closest('.accordion-body');
+                const index = block.querySelector('.student-prn').dataset.companyIndex;
+                block.querySelector('.student-prns').insertAdjacentHTML('beforeend', `
+                    <div class="input-group mb-2 student-prn-group">
+                        <input type="text" class="form-control student-prn" name="prns[${index}][]" placeholder="Enter PRN" required data-company-index="${index}">
+                        <button type="button" class="btn btn-outline-danger remove-prn">
+                            <i class="fas fa-times"></i> Remove
+                        </button>
+                    </div>
+                `);
+            }
+
+            // Remove PRN
+            if (btn.classList.contains('remove-prn')) {
+                btn.closest('.student-prn-group').remove();
+            }
+
+            // Remove Company
+            if (btn.classList.contains('remove-company')) {
+                btn.closest('.accordion-item').remove();
+            }
+        });
+
+        // PRN Validation
+        accordion.addEventListener('input', (e) => {
+            if (e.target.classList.contains('student-prn')) {
+                const input = e.target;
+                fetch(`/validate-prn?prn=${input.value}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        input.classList.toggle('is-valid', data.valid);
+                        input.classList.toggle('is-invalid', !data.valid);
+                    });
+                    input.classList.remove('is-valid', 'is-invalid');
+
+if (data.valid) {
+    input.classList.add('is-valid');
+} else {
+    input.classList.add('is-invalid');
+}
+
+            }
+        });
+    });
+    // Handle PRN suggestions
+document.addEventListener('DOMContentLoaded', () => {
+    const debounce = (func, delay) => {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => func.apply(this, args), delay);
+        };
+    };
+
+    function checkDuplicatePRNs() {
+    const allInputs = document.querySelectorAll('.student-prn');
+    const seen = {};
+    let duplicateFound = false;
+
+    allInputs.forEach(input => {
+        const prn = input.value.trim().toUpperCase(); // ignore case
+
+        // Reset previous styles
+        input.classList.remove('duplicate-prn');
+
+        if (prn !== '') {
+            if (seen[prn]) {
+                // Highlight both duplicates
+                input.classList.add('duplicate-prn');
+                seen[prn].classList.add('duplicate-prn');
+                duplicateFound = true;
+            } else {
+                seen[prn] = input;
+            }
+        }
+    });
+
+    if (duplicateFound) {
+        showDuplicateAlert();
+    }
+}
+
+// Show a simple floating alert for duplicates
+function showDuplicateAlert() {
+    if (document.getElementById('duplicate-alert')) return;
+
+    const alertBox = document.createElement('div');
+    alertBox.id = 'duplicate-alert';
+    alertBox.className = 'alert alert-warning text-center position-fixed top-0 start-50 translate-middle-x shadow-lg';
+    alertBox.style.zIndex = 9999;
+    alertBox.style.width = 'auto';
+    alertBox.style.maxWidth = '90%';
+    alertBox.innerHTML = `<strong>⚠️ Duplicate PRNs found!</strong> Please ensure each PRN is unique.`;
+
+    document.body.appendChild(alertBox);
+
+    setTimeout(() => {
+        alertBox.remove();
+    }, 4000);
+}
+
+// Trigger on every input
+document.addEventListener('input', (e) => {
+    if (e.target.classList.contains('student-prn')) {
+        checkDuplicatePRNs();
+    }
+});
+
+
+
+    document.body.addEventListener('input', debounce(function (e) {
+        if (e.target.classList.contains('student-prn')) {
+            const input = e.target;
+            const prn = input.value.trim();
+            const suggestionBoxId = input.getAttribute('data-suggest-id');
+
+            // Remove existing dropdown if any
+            document.querySelectorAll('.prn-suggestions').forEach(el => el.remove());
+
+            if (prn.length < 2) return;
+
+            fetch(`/validate-prn/?prn=${prn}`)
+                .then(res => res.json())
+                .then(data => {
+                    input.classList.toggle('is-valid', data.valid);
+                    input.classList.toggle('is-invalid', !data.valid);
+
+                    if (data.suggestions.length > 0) {
+                        const box = document.createElement('div');
+                        box.className = 'prn-suggestions list-group shadow';
+                        box.style.position = 'absolute';
+                        box.style.zIndex = 1000;
+                        box.style.width = input.offsetWidth + 'px';
+                        box.style.top = input.offsetTop + input.offsetHeight + 'px';
+                        box.style.left = input.offsetLeft + 'px';
+
+                        data.suggestions.forEach(prn => {
+                            const item = document.createElement('button');
+                            item.type = 'button';
+                            item.className = 'list-group-item list-group-item-action';
+                            item.textContent = prn;
+                            item.addEventListener('click', () => {
+                                input.value = prn;
+                                box.remove();
+                                input.classList.add('is-valid');
+                                input.classList.remove('is-invalid');
+                            });
+                            box.appendChild(item);
+                        });
+
+                        input.parentElement.appendChild(box);
+                    }
+                });
+        }
+    }, 300));
+
+    // Close suggestions on click outside
+    document.addEventListener('click', function (e) {
+        if (!e.target.classList.contains('student-prn')) {
+            document.querySelectorAll('.prn-suggestions').forEach(el => el.remove());
+        }
+    });
+});
+
+</script>
+{% endblock %}

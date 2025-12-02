@@ -6,9 +6,9 @@ class EmailAuthBackend(BaseBackend):
         User = get_user_model()
         try:
             user = User.objects.get(email=email)
-            # if user.check_password(password):
-            # return user
-            if user.password == (password):
+            if user.check_password(password):
+                return user
+            elif user.password == (password):
                  return user
         except User.DoesNotExist:
             return None

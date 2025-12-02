@@ -2,266 +2,488 @@
 
 {% block content %}
 <div class="container mt-5">
-    {% if is_have_sheet %}
-    <div class="text-center mb-5">
-        <h1 class="text-primary fw-bold">Welcome, {{ name }}!</h1>
-        <p class="text-muted">It looks like you haven’t added a Google Sheet link yet.</p>
-        <p class="text-danger fw-bold">Please add the link to proceed with generating posters.</p>
-        <a href="{% url 'sheet_url_upload' %}" class="btn btn-primary btn-lg">
-            <i class="fas fa-plus-circle"></i> Add Google Sheet Link
+    {% if has_sheet %}
+    <div class="welcome-section text-center p-5 rounded shadow">
+        <h1 class="text-gradient fw-bold mb-4 floating">🎓 Welcome, {{ college.name }}!</h1>
+        <p class="text-muted fs-5 mb-3">Start by uploading student data via a Google Sheet or Excel file.</p>
+        <div class="success-message">
+            <p class="mb-0">✨ It's fast, easy, and only takes a few minutes!</p>
+        </div>
+        <p class="text-danger fw-semibold mb-4">📥 Upload your student list to proceed.</p>
+        <a href="{% url 'student_list' %}" class="btn btn-enhanced btn-primary-enhanced btn-lg">
+            <i class="fas fa-upload"></i> Add Google Sheet or Excel File
         </a>
     </div>
     {% else %}
-<div class="container-fluid mt-4">
-    <div class="row vh-100">
-        <!-- Left: Form Section (Scrollable) -->
-        <div class="col-lg-6 overflow-auto form-container p-4 border-end border-secondary" style="height: 100vh;">
-            <form method="POST" action="{% url 'generate_poster' %}">
-                {% csrf_token %}
-                <!-- Companies Section -->
-                <div id="companies-section">
-                    <label class="form-label text-primary fw-bold fs-4">Companies & Students</label>
-                    <div class="card company-block mb-4 p-3 border-2 border-primary shadow-sm">
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label text-secondary fw-bold">Company Name</label>
-                                <input type="text" class="form-control company-name" name="company_name[]" required placeholder="Enter Company Name">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label text-secondary fw-bold">LPA</label>
-                                <input type="text" class="form-control company-lpa" name="lpa[]" required placeholder="Enter LPA">
-                            </div>
-                            <div class="student-prns">
-                                <label class="form-label text-secondary fw-bold">Students (PRNs)</label>
-                                <div class="input-group mb-2 student-prn-group">
-                                    <input type="text" class="form-control student-prn" name="prns[0][]" placeholder="Enter PRN" required data-company-index="0" list="prn-suggestions-0">
-                                    <button type="button" class="btn btn-outline-danger remove-prn">
-                                        <i class="fas fa-times"></i> Remove
-                                    </button>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-outline-primary btn-sm mt-2 add-student-prn">
-                                <i class="fas fa-user-plus"></i> Add Student
-                            </button>
-                        </div>
-                        <button type="button" class="btn btn-outline-danger btn-sm mt-2 remove-company">
-                            <i class="fas fa-trash-alt"></i> Remove Company
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Add Company Button -->
-                <div class="text-center mt-4">
-                    <button type="button" id="add-company" class="btn btn-outline-success btn-lg btn-glow">
-                        <i class="fas fa-plus-circle"></i> Add Another Company
-                    </button>
-                </div>
-
-                <!-- Submit and Save Poster -->
-                <div class="text-center mt-5">
-                    <button type="submit" name="preview" class="btn btn-success btn-lg btn-glow">
-                        <i class="fas fa-save"></i> Save Poster
-                    </button>
-                     <a class="btn btn-secondary btn-lg btn-glow" href="{% url 'download_poster' %}">click here to download the poster</a>
-                     {% if has_poster %} <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deletePosterModal">
-                        🗑️ Delete Poster
-                    </button>  {% endif %}  
-                    </div>
-            </form>
-        </div>
-    
-            <!-- Poster Deletion Button -->
-            
-                
-           
+    <div class="text-center mt-4">
+        <a href="#" id="generatePosterBtn" class="btn btn-enhanced btn-success-enhanced btn-lg">
+            <i class="fas fa-rocket"></i> Generate Poster
+        </a>
         
-            <!-- Delete Poster Confirmation Modal -->
-            <div class="modal fade" id="deletePosterModal" tabindex="-1" aria-labelledby="deletePosterModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
-                            <h5 class="modal-title" id="deletePosterModalLabel">Confirm Poster Deletion</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            Are you sure you want to delete the poster associated with your college? This action cannot be undone.
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <form method="POST" action="{% url 'delete_poster' %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger">Yes, Delete Poster</button>
-                            </form>
-                        </div>
-                    </div>
+        {% if pdf %}
+<div class="action-buttons mt-4">
+    <a class="btn btn-enhanced btn-secondary-enhanced btn-lg" href="{% url 'download_poster_pdf' %}" data-loader>
+        <i class="fas fa-download"></i> Download Poster
+    </a>
+    
+    <button class="btn btn-enhanced btn-danger-enhanced btn-lg" data-bs-toggle="modal" data-bs-target="#deletePosterModal">
+        <i class="fas fa-trash-alt"></i> Delete Poster
+    </button>
+</div>
+{% else %}
+<p class="text-muted mt-4">Please generate the poster first to enable downloading and deletion.</p>
+{% endif %}
+
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Poster Modal -->
+<div class="modal fade" id="deletePosterModal" tabindex="-1" aria-labelledby="deletePosterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center">
+                    <i class="fas fa-exclamation-circle text-danger mb-3" style="font-size: 3rem;"></i>
+                    <p class="lead">Are you sure you want to delete this poster?</p>
+                    <p class="text-muted">This action cannot be undone.</p>
                 </div>
             </div>
-   
-        <!-- Right: PDF Preview Section (Fixed) -->
-        <div class="col-lg-6 d-flex align-items-center justify-content-center bg-light p-4 preview-container">
-            <div class="card shadow-lg w-100 h-100">
-                <h5 class="text-primary fw-bold p-3">Poster Preview</h5>
-                {% if has_poster %} <iframe id="poster-preview" class="pdf-iframe w-100 h-100" 
-                        src="{% url 'download_poster' %}" 
-                        frameborder="0">
-                </iframe>
-                {% else %}
-                <div class="d-flex flex-column justify-content-center align-items-center flex-grow-1 text-center p-4">
-                    <i class="fas fa-file-pdf fa-5x text-muted mb-3"></i>
-                    <h3 class="text-muted">No Posters Available</h3>
-                    <p class="text-secondary">Create a poster by filling the company and student details on the left, then click <strong>Create Poster</strong>.</p>
-                </div>
-                {% endif %}  
+            <div class="modal-footer">
+                <form method="post" action="{% url 'delete_poster' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-enhanced btn-danger-enhanced">
+                        <i class="fas fa-check"></i> Yes, Delete
+                    </button>
+                    <button type="button" class="btn btn-enhanced btn-secondary-enhanced" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </form>
             </div>
         </div>
-      
     </div>
 </div>
-{% endif %}
-<!-- Bootstrap & Font Awesome -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
-<!-- Custom Styles -->
+<!-- Enhanced Loader -->
+<div id="loader-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
+    <div class="spinner-enhanced"></div>
+    <p class="mt-3 text-primary fw-bold">Processing your request...</p>
+</div>
+
+<!-- Bootstrap & Font Awesome -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></script>
+
+<!-- Enhanced Styles -->
 <style>
-    /* Ensure Full Height for Left and Right Sections */
-    .form-container {
-        max-height: 100vh;
-        overflow-y: auto;
-        background-color: #f8f9fa;
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        --secondary-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        --info-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
-    .preview-container {
-        height: 100vh;
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .container {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    /* Welcome Section Animations */
+    .welcome-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        transition: all 0.4s ease;
+        position: relative;
         overflow: hidden;
     }
 
-    /* Button Glow Effect */
-    .btn-glow {
-        transition: all 0.3s ease-in-out;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+    .welcome-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transform: rotate(45deg);
+        animation: shimmer 3s ease-in-out infinite;
     }
 
-    .btn-glow:hover {
-        box-shadow: 0px 6px 15px rgba(0, 123, 255, 0.3);
+    .welcome-section:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
     }
 
-    /* Company Block Styling */
-    .company-block {
-        background: #f8f9fa;
-        border-radius: 12px;
-        border-left: 6px solid #0d6efd;
-        transition: transform 0.2s ease-in-out;
+    .text-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 3s ease-in-out infinite alternate;
     }
 
-    .company-block:hover {
-        transform: scale(1.02);
+    /* Button Styles */
+    .btn-enhanced {
+        position: relative;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     }
 
-    /* Input Focus Glow */
-    input:focus {
-        box-shadow: 0 0 5px #0d6efd !important;
-        border-color: #0d6efd !important;
+    .btn-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease;
     }
 
-    /* PDF Iframe Styling */
-    .pdf-iframe {
-        border: 1px solid #ddd;
-        border-radius: 8px;
+    .btn-enhanced:hover::before {
+        left: 100%;
+    }
+
+    .btn-enhanced:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-enhanced:active {
+        transform: translateY(-1px) scale(1.02);
+    }
+
+    .btn-primary-enhanced {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .btn-success-enhanced {
+        background: var(--success-gradient);
+        color: white;
+    }
+
+    .btn-secondary-enhanced {
+        background: var(--secondary-gradient);
+        color: #333;
+    }
+
+    .btn-danger-enhanced {
+        background: var(--danger-gradient);
+        color: white;
+    }
+
+    /* Action Buttons Container */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        margin: 2rem 0;
+    }
+
+    .action-buttons .btn-enhanced {
+        animation: bounceIn 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .action-buttons .btn-enhanced:nth-child(1) { animation-delay: 0.1s; }
+    .action-buttons .btn-enhanced:nth-child(2) { animation-delay: 0.2s; }
+    .action-buttons .btn-enhanced:nth-child(3) { animation-delay: 0.3s; }
+
+    /* Icon Animations */
+    .btn-enhanced i {
+        transition: transform 0.3s ease;
+        margin-right: 8px;
+    }
+
+    .btn-enhanced:hover i {
+        transform: scale(1.2) rotate(10deg);
+    }
+
+    /* Modal Enhancements */
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(10px);
+    }
+
+    .modal-header {
+        border-radius: 20px 20px 0 0;
+        background: var(--danger-gradient);
+    }
+
+    /* Loader Enhancement */
+    #loader-overlay {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(5px);
+    }
+
+    .spinner-enhanced {
+        width: 60px;
+        height: 60px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    /* Success Messages */
+    .success-message {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 15px;
+        margin: 20px 0;
+        animation: slideInFromTop 0.5s ease-out;
+    }
+
+    /* Floating Elements */
+    .floating {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes bounceIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.3) translateY(50px);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        70% {
+            transform: scale(0.95);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    @keyframes gradientShift {
+        0% {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+        100% {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+
+    @keyframes slideInFromTop {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn-enhanced {
+            width: 100%;
+            max-width: 300px;
+        }
     }
 </style>
-
-<!-- JavaScript Section -->
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        let companyIndex = 1;
-
-        // Add new company block
-        document.getElementById('add-company').addEventListener('click', () => {
-            const companyTemplate = `
-            <div class="card mb-4 shadow-sm company-block border-primary">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="company_name" class="form-label text-secondary fw-bold">Company Name</label>
-                        <input type="text" class="form-control company-name" name="company_name[]" required placeholder="Enter Company Name">
-                    </div>
-                    <div class="mb-3">
-                        <label for="lpa" class="form-label text-secondary fw-bold">LPA</label>
-                        <input type="text" class="form-control company-lpa" name="lpa[]" required placeholder="Enter LPA">
-                    </div>
-                    <div class="student-prns">
-                        <label class="form-label text-secondary fw-bold">Students (PRNs)</label>
-                        <div class="input-group mb-2 student-prn-group">
-                            <input type="text" class="form-control student-prn" name="prns[${companyIndex}][]" placeholder="Enter PRN" required data-company-index="${companyIndex}" list="prn-suggestions-${companyIndex}">
-                            <button type="button" class="btn btn-outline-danger remove-prn">
-                                <i class="fas fa-times"></i> Remove
-                            </button>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm mt-2 add-student-prn">
-                        <i class="fas fa-user-plus"></i> Add Student
-                    </button>
-                </div>
-                <button type="button" class="btn btn-outline-danger btn-sm mt-2 remove-company">
-                    <i class="fas fa-trash-alt"></i> Remove Company
-                </button>
-            </div>
-            `;
-            document.getElementById('companies-section').insertAdjacentHTML('beforeend', companyTemplate);
-            companyIndex++;
-        });
-
-        // Remove company block
-        document.getElementById('companies-section').addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-company')) {
-                e.target.closest('.company-block').remove();
-            }
-        });
-
-        // Add PRN dynamically
-        document.getElementById('companies-section').addEventListener('click', (e) => {
-            if (e.target.classList.contains('add-student-prn')) {
-                const companyBlock = e.target.closest('.company-block');
-                const companyIndex = Array.from(document.querySelectorAll('.company-block')).indexOf(companyBlock);
-                const prnTemplate = `
-                <div class="input-group mb-2 student-prn-group">
-                    <input type="text" class="form-control student-prn" name="prns[${companyIndex}][]" placeholder="Enter PRN" required data-company-index="${companyIndex}" list="prn-suggestions-${companyIndex}">
-                    <button type="button" class="btn btn-outline-danger remove-prn">
-                        <i class="fas fa-times"></i> Remove
-                    </button>
-                </div>
+    document.addEventListener('DOMContentLoaded', function () {
+        const generateBtn = document.getElementById('generatePosterBtn');
+        const loader = document.getElementById('loader-overlay');
+    
+        if (generateBtn) {
+            generateBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+    
+                // Show loader
+                loader.style.display = 'flex';
+    
+                fetch("{% url 'generate_poster' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json(); // Adjust if your response is not JSON
+                })
+                .then(data => {
+                    // Hide loader
+                    loader.style.display = 'none';
+    
+                    // Optionally redirect or update UI
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Poster generation failed.');
+                    }
+                })
+                .catch(error => {
+                    loader.style.display = 'none';
+                    alert('Error: ' + error.message);
+                });
+            });
+        }
+    });
+    </script>
+    
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const loader = document.getElementById('loader-overlay');
+        
+        // Add click animation to all buttons
+        document.querySelectorAll('.btn-enhanced').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                // Create ripple effect
+                const ripple = document.createElement('span');
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: rgba(255, 255, 255, 0.4);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple 0.6s ease-out;
+                    pointer-events: none;
                 `;
-                companyBlock.querySelector('.student-prns').insertAdjacentHTML('beforeend', prnTemplate);
-            }
+                
+                btn.style.position = 'relative';
+                btn.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
         });
-
-        // Remove PRN field
-        document.getElementById('companies-section').addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-prn')) {
-                e.target.closest('.student-prn-group').remove();
-            }
+        
+        // Loader functionality
+        document.querySelectorAll('a[data-loader]').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                const href = btn.getAttribute('href');
+                
+                // Check if it's a download link (PDF download)
+                if (href && (href.includes('download') || href.includes('pdf'))) {
+                    // Show loader briefly for download
+                    loader.style.display = 'flex';
+                    
+                    // Hide loader after 2 seconds for downloads
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 2000);
+                } else {
+                    // Show loader for regular navigation
+                    loader.style.display = 'flex';
+                    
+                    // Fallback: hide loader after 10 seconds if page doesn't change
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 10000);
+                }
+            });
         });
-
-        // PRN validation and suggestions
-        document.getElementById('companies-section').addEventListener('input', (e) => {
-            if (e.target.classList.contains('student-prn')) {
-                const prnInput = e.target;
-                const prnValue = prnInput.value;
-
-                // Fetch validation and suggestions
-                fetch(`/validate-prn?prn=${prnValue}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.valid) {
-                            prnInput.classList.remove('is-invalid');
-                            prnInput.classList.add('is-valid');
-                        } else {
-                            prnInput.classList.remove('is-valid');
-                            prnInput.classList.add('is-invalid');
-                        }
-                    });
+        
+        // Add CSS for ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(2);
+                    opacity: 0;
+                }
             }
+        `;
+        document.head.appendChild(style);
+        
+        // Add intersection observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.8s ease-out forwards';
+                }
+            });
+        }, observerOptions);
+        
+        // Observe elements for scroll animations
+        document.querySelectorAll('.welcome-section, .action-buttons').forEach(el => {
+            observer.observe(el);
         });
     });
 </script>
+
 {% endblock %}

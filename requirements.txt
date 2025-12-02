@@ -4,6 +4,9 @@ google-api-python-client>=2.0.0
 google-auth>=2.0.0
 reportlab>=3.6.0
 requests>=2.25.0
-
-# psycopg with binary distribution for PostgreSQL support
 psycopg2-binary==2.9.9
+openpyxl
+
+# Required for converting PDF to image
+pdf2image>=1.16.3
+Pillow>=10.0.0

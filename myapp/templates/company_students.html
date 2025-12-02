@@ -1,0 +1,606 @@
+{% extends "page.html" %}
+
+{% block content %}
+
+<div class="d-flex flex-row-reverse mt-1 mb-3">
+    <a href="{% url 'download_all_photos' %}" id="downloadPhotosBtn" class="btn btn-info btn-glow ms-3">
+        <span class="btn-text">Fetch All Photos</span>
+        <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+      </a>  
+    <button type="button" class="btn btn-success float-right" data-bs-toggle="modal" data-bs-target="#addPlacementModal">
+      <i class="bi bi-plus-circle"></i> Add Placement Entry
+    </button>
+  
+  </div>
+  
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center" style="z-index: 1055;">
+    <div class="text-center text-white">
+      <div class="spinner-border text-light mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+      <h5>Fetching photos, please wait...</h5>
+    </div>
+  </div>
+<!-- Toast Container (Top Center, Enlarged) -->
+<div class="position-fixed top-0 start-50 translate-middle-x mt-4" style="z-index: 1080;">
+    <div id="downloadToast" class="toast text-bg-success border-0 shadow-lg p-4" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false" style="min-width: 400px; max-width: 600px; font-size: 1.1rem; border-radius: 1rem;">
+      <div class="d-flex flex-column">
+        <div class="toast-body fw-semibold" id="toastMessage">
+          Photos downloaded successfully.
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+          <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="toast" aria-label="Close">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+<div class="modal fade" id="addPlacementModal" tabindex="-1" aria-labelledby="addPlacementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow-lg">
+        <!-- Fixed Header -->
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addPlacementModalLabel">Add Placement</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+  
+        <!-- Scrollable Body -->
+        <form method="POST" action="{% url 'add_placement' %}">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="accordion" id="companiesAccordion">
+              <div class="accordion-item company-block mb-3 border-start border-4 border-primary shadow">
+                
+                <div id="company-0" class="accordion-collapse collapse show">
+                  <div class="accordion-body">
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Select Company</label>
+                      <select class="form-select" name="companies[]" required>
+                        <option value="" disabled selected>Select a company</option>
+                        {% for company in companies_list %}
+                          <option value="{{ company.id }}">{{ company.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+  
+                    <div class="student-prns">
+                      <label class="form-label text-secondary fw-bold">Students (PRNs)</label>
+                      <div class="input-group mb-2 student-prn-group">
+                        <input type="text" class="form-control student-prn" name="prns[0][]" placeholder="Enter PRN" required data-company-index="0" data-suggest-id="prn-0-0">
+                        <button type="button" class="btn btn-outline-danger remove-prn">
+                          <i class="fas fa-times"></i> Remove
+                        </button>
+                      </div>
+                    </div>
+  
+                    <button type="button" class="btn btn-outline-primary btn-sm add-student-prn mt-2">
+                      <i class="bi bi-node-plus-fill"></i> Add Student
+                    </button>
+                
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Fixed Footer -->
+          <div class="modal-footer">
+            <button type="submit" name="preview" class="btn btn-success btn-lg">
+              <i class="bi bi-upload"></i> Add Placements
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+<div class="accordion" id="companyAccordion">
+    {% for company in companies %}
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading{{ company.id }}">
+            <button class="accordion-button collapsed company-toggle" type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapse{{ company.id }}"
+                    aria-expanded="false"
+                    aria-controls="collapse{{ company.id }}"
+                    data-company-id="{{ company.id }}">
+                {{ company.name }} (LPA: {{ company.lpa }})
+            </button>
+        </h2>
+        <div id="collapse{{ company.id }}" class="accordion-collapse collapse"
+             aria-labelledby="heading{{ company.id }}"
+             data-bs-parent="#companyAccordion">
+            <div class="accordion-body">
+                <div class="student-list mt-3" id="student-list-{{ company.id }}">
+                    <p class="text-muted">Students will load automatically when this section is expanded.</p>
+                </div>
+
+                <form class="add-student-form mt-3" data-company-id="{{ company.id }}">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="prn" class="form-control" placeholder="Enter Student PRN" required>
+                        <button class="btn btn-outline-success" type="submit">Add Student</button>
+                    </div>
+                    <div class="form-feedback text-danger small mt-1" style="display:none;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>No companies found.</p>
+    {% endfor %}
+</div>
+
+<style>.toast-body small {
+    font-size: 0.85rem;
+    display: block;
+    margin-top: 0.5rem;
+    opacity: 0.9;
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.3;
+  }
+  
+.student-card {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #f8f9fa;
+}
+.student-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.student-photo {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+}
+.download-failed {
+    background-color: #f8d7da !important;
+    border-color: #f5c2c7 !important;
+}
+.student-photo-placeholder {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: #ced4da;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+}
+</style>
+<style>
+    .btn-glow {
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        transition: all 0.2s ease-in-out;
+    }
+    .btn-glow:hover {
+        box-shadow: 0 6px 20px rgba(0, 123, 255, 0.35);
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: #0d6efd;
+    }
+    .company-block {
+        border-radius: 10px;
+    }
+    input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 4px #0d6efd;
+    }
+    .modal-dialog-scrollable .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+#loadingOverlay {
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.toast-body small {
+  font-size: 0.75rem;
+  display: block;
+  margin-top: 0.5rem;
+  opacity: 0.85;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById("downloadPhotosBtn").addEventListener("click", function(e) {
+        e.preventDefault();
+        fetch(this.href)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Downloaded: ${data.downloaded}\nFailed:\n${data.failed.join('\n')}`);
+                } else {
+                    alert("Something went wrong.");
+                }
+            });
+    });
+    </script>
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i=0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+$(document).ready(function() {
+    $('#companyAccordion').on('shown.bs.collapse', function(e) {
+        const collapseDiv = $(e.target);
+        const collapseId = collapseDiv.attr('id');
+        const button = $('button[data-bs-target="#' + collapseId + '"]');
+        const companyId = button.data('company-id');
+        const studentListDiv = $('#student-list-' + companyId);
+
+        if (button.data('loaded')) return;
+
+        studentListDiv.html('<p class="text-info">Loading students...</p>');
+
+        $.ajax({
+            url: `/companies/${companyId}/students/`,
+            type: 'GET',
+            success: function(response) {
+                const students = response.students;
+                if (students.length === 0) {
+                    studentListDiv.html('<p class="text-warning">No students placed for this company.</p>');
+                } else {
+                    let html = '<div class="row">';
+                    students.forEach(function(student) {
+                        const initials = student.name
+                            .split(" ")
+                            .map(word => word[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase();
+
+                        const avatarHTML = `<div class="student-photo-placeholder me-3" title="${student.name}">${initials}</div>`;
+                        html += `
+    <div class="col-md-6 col-lg-4">
+        <div class="student-card card h-100" id="student-card-${student.id}">
+            <div class="card-body d-flex align-items-center">
+                ${avatarHTML}
+                <div>
+                    <h6 class="mb-1">${student.name}</h6>
+                    <p class="mb-0 text-muted">PRN: ${student.prn}<br>Dept: ${student.department}</p>
+                    <a href="${student.photo_url}"> See Image</a>
+                    </div>
+            </div>
+            <div class="card-footer text-end bg-transparent border-0">
+                <button class="btn btn-sm ${student.has_photo ? 'btn-success' : 'btn-primary'} fetch-photo-btn"
+                    data-student-id="${student.id}"
+                    title="${student.has_photo ? 'Already fetched' : 'Click to fetch Photo from server.'}"
+                   >
+                    ${student.has_photo ? 'Refetch' : 'Fetch Photo'}
+                </button>
+                <button class="btn btn-sm btn-danger ms-2 remove-student-btn" data-student-id="${student.id}" title="Remove Student">
+                    Remove
+                </button>
+            </div>
+        </div>
+    </div>`;
+
+                    });
+                    html += '</div>';
+                    studentListDiv.html(html);
+                }
+
+                button.data('loaded', true);
+            },
+            error: function() {
+                studentListDiv.html('<p class="text-danger">Error loading students.</p>');
+            }
+        });
+    });
+
+    $(document).on('click', '.fetch-photo-btn', function() {
+        const btn = $(this);
+        const studentId = btn.data('student-id');
+        const card = $('#student-card-' + studentId);
+
+        btn.prop('disabled', true).html(`
+            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Fetching...
+        `);
+
+        $.ajax({
+            url: `/students/${studentId}/download-photo/`,
+            type: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                if (!response.success) {
+                    btn.removeClass('btn-primary').addClass('btn-danger').html('Failed');
+                    card.addClass('download-failed');
+                    btn.attr('data-bs-toggle', 'tooltip')
+                       .attr('title', response.message || 'Failed to fetch photo')
+                       .tooltip('show');
+                    setTimeout(() => {
+                        btn.tooltip('dispose');
+                        btn.removeAttr('data-bs-toggle title');
+                    }, 5000);
+                } else {
+                    btn.removeClass('btn-primary').addClass('btn-success').text('Fetched');
+                }
+                btn.prop('disabled', false);
+            },
+            error: function() {
+                btn.removeClass('btn-primary').addClass('btn-danger').html('Failed');
+                card.addClass('download-failed');
+                btn.attr('data-bs-toggle', 'tooltip')
+                   .attr('title', 'Error fetching photo')
+                   .tooltip('show');
+                setTimeout(() => {
+                    btn.tooltip('dispose');
+                    btn.removeAttr('data-bs-toggle title');
+                }, 5000);
+            }
+        });
+    });
+
+    // ✅ FIXED HERE
+    $(document).on('submit', '.add-student-form', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const companyId = form.data('company-id');
+        const prnInput = form.find('input[name="prn"]');
+        const feedbackDiv = form.find('.form-feedback');
+        const prn = prnInput.val().trim();
+
+        if (!prn) {
+            feedbackDiv.text('Please enter a PRN').show();
+            return;
+        }
+
+        feedbackDiv.hide();
+
+        $.ajax({
+            url: `/companies/${companyId}/add-student/`,
+            type: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            data: { prn: prn },
+            success: function(response) {
+                const collapseId = `collapse${companyId}`;
+                const button = $(`button[data-company-id="${companyId}"]`);
+
+                if (response.success) {
+                    feedbackDiv.css('color', 'green').text('Student added successfully!').show();
+                    prnInput.val('');
+
+                    // ✅ Reset loaded flag and reload accordion
+                    button.data('loaded', false);
+                    $(`#${collapseId}`).collapse('hide');
+                    setTimeout(() => {
+                        $(`#${collapseId}`).collapse('show');
+                    }, 300);
+                } else {
+                    feedbackDiv.css('color', 'red').text(response.message || 'Failed to add student.').show();
+                }
+            },
+            error: function() {
+                feedbackDiv.css('color', 'red').text('Server error while adding student.').show();
+            }
+        });
+    });
+});
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const accordion = document.getElementById('companiesAccordion');
+
+    accordion.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+
+        if (btn.classList.contains('add-student-prn')) {
+            const block = btn.closest('.accordion-body');
+            const index = block.querySelector('.student-prn').dataset.companyIndex;
+            block.querySelector('.student-prns').insertAdjacentHTML('beforeend', `
+                <div class="input-group mb-2 student-prn-group">
+                    <input type="text" class="form-control student-prn" name="prns[${index}][]" placeholder="Enter PRN" required data-company-index="${index}">
+                    <button type="button" class="btn btn-outline-danger remove-prn">
+                        <i class="fas fa-times"></i> Remove
+                    </button>
+                </div>
+            `);
+        }
+
+        if (btn.classList.contains('remove-prn')) {
+            btn.closest('.student-prn-group').remove();
+        }
+    });
+
+    accordion.addEventListener('input', (e) => {
+        if (e.target.classList.contains('student-prn')) {
+            const input = e.target;
+            fetch(`/validate-prn?prn=${input.value}`)
+                .then(res => res.json())
+                .then(data => {
+                    input.classList.toggle('is-valid', data.valid);
+                    input.classList.toggle('is-invalid', !data.valid);
+                });
+        }
+    });
+});
+
+$(document).on('click', '.remove-student-btn', function() {
+    const studentId = $(this).data('student-id');
+    // const collegeId = $(this).data('');
+
+    if (!confirm('Are you sure you want to remove this student from placement?')) return;
+
+    $.ajax({
+        url: '/remove_student/',
+        type: 'POST',
+        data: {
+            'student_id': studentId,
+            // 'college_id': collegeId,
+            'csrfmiddlewaretoken': getCSRFToken(), // you need to implement or include csrf token in page
+        },
+        success: function(response) {
+            if (response.success) {
+                // Remove the student card from DOM
+                $('#student-card-' + studentId).fadeOut(function() {
+                    $(this).remove();
+                });
+            } else {
+                alert('Error: ' + (response.error || 'Unknown error'));
+            }
+        },
+        error: function(xhr) {
+            alert('Failed to remove student: ' + xhr.statusText);
+        }
+    });
+});
+
+function getCSRFToken() {
+    // If you are using Django's default csrf token in a cookie:
+    let cookieValue = null;
+    const name = 'csrftoken';
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+</script>
+<script>
+document.getElementById("downloadPhotosBtn").addEventListener("click", function(e) {
+    e.preventDefault();
+    const btn = this;
+    const textSpan = btn.querySelector('.btn-text');
+    const spinner = btn.querySelector('.spinner-border');
+
+    // Start animation
+    textSpan.textContent = "Downloading...";
+    spinner.classList.remove('d-none');
+    btn.classList.add('disabled');
+
+    fetch(btn.href)
+        .then(response => response.json())
+        .then(data => {
+            // End animation
+            textSpan.textContent = "Download All Photos";
+            spinner.classList.add('d-none');
+            btn.classList.remove('disabled');
+
+            // ✨ Interactive response
+            if (data.success) {
+                const downloadedCount = data.downloaded;
+                const failedList = data.failed;
+
+                let msg = `✅ Downloaded: ${downloadedCount} photo${downloadedCount !== 1 ? 's' : ''}`;
+                if (failedList.length > 0) {
+                    msg += `\n⚠️ Failed (${failedList.length}):\n- ` + failedList.join('\n- ');
+                }
+
+                Swal.fire({
+                    title: 'Photo Download Report',
+                    icon: failedList.length > 0 ? 'warning' : 'success',
+                    html: `<pre style="text-align:left; font-size:14px;">${msg}</pre>`,
+                    confirmButtonColor: '#0d6efd',
+                });
+            } else {
+                Swal.fire({
+                    title: 'Download Failed',
+                    text: 'Something went wrong.',
+                    icon: 'error',
+                    confirmButtonColor: '#dc3545',
+                });
+            }
+        })
+        .catch(() => {
+            textSpan.textContent = "Download All Photos";
+            spinner.classList.add('d-none');
+            btn.classList.remove('disabled');
+
+            Swal.fire({
+                title: 'Network Error',
+                text: 'Failed to contact the server.',
+                icon: 'error',
+                confirmButtonColor: '#dc3545',
+            });
+        });
+});
+
+document.getElementById("downloadPhotosBtn").addEventListener("click", function (e) {
+    e.preventDefault();
+    const btn = this;
+
+    // Show overlay
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.remove('d-none');
+
+    fetch(btn.href)
+        .then(response => response.json())
+        .then(data => {
+            overlay.classList.add('d-none');
+
+            const toastEl = document.getElementById('downloadToast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toast = new bootstrap.Toast(toastEl);
+
+            if (data.success) {
+                let msg = `✅ Downloaded: ${data.downloaded}`;
+                if (data.failed.length > 0) {
+                    msg += `<br>⚠️ Failed: ${data.failed.length}<br><ins class="text-white">${data.failed.join('<br>')}</ins>`;
+                    toastEl.classList.remove('text-bg-success');
+                    toastEl.classList.add('text-bg-info');
+                } else {
+                    toastEl.classList.remove('text-bg-warning');
+                    toastEl.classList.add('text-bg-success');
+                }
+
+                toastMsg.innerHTML = msg;
+                toast.show();
+            } else {
+                toastMsg.innerHTML = `❌ Something went wrong while downloading photos.`;
+                toastEl.classList.remove('text-bg-success', 'text-bg-warning');
+                toastEl.classList.add('text-bg-danger');
+                toast.show();
+            }
+        })
+        .catch(() => {
+            overlay.classList.add('d-none');
+            const toastEl = document.getElementById('downloadToast');
+            const toastMsg = document.getElementById('toastMessage');
+            const toast = new bootstrap.Toast(toastEl);
+
+            toastMsg.innerHTML = `🚫 Network Error. Please try again.`;
+            toastEl.classList.remove('text-bg-success', 'text-bg-warning');
+            toastEl.classList.add('text-bg-danger');
+            toast.show();
+        });
+});
+
+
+</script>
+{% endblock %}

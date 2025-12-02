@@ -1,5 +1,5 @@
-# Use the official Python image as the base image
-FROM python:3.12-slim
+# Use the official Python Alpine image as the base image
+FROM python:3.8.10-alpine
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -7,16 +7,35 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Install system and build dependencies
+RUN apk update && apk add --no-cache \
+# RUN apk update && apk add --no-cache \
+    gcc \
+    musl-dev \
+    zlib-dev \
+    libffi-dev \
+    cmake \
+    tzdata \
+    postgresql-dev \
+    poppler-utils \
+    jpeg-dev \
+    py3-pillow \
+    python3-dev \
+    libxml2-dev \
+    libxslt-dev \
+    bash \
+    curl \
+    git
 
-# Install Python dependencies
+
+# Upgrade pip, setuptools, wheel
+RUN pip install --upgrade pip setuptools wheel
+
+# Copy requirements and install Python dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project into the container
+# Copy project files into the container
 COPY . /app/
 
 # Expose the port the app runs on

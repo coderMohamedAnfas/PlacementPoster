@@ -45,8 +45,8 @@ class College(AbstractBaseUser, PermissionsMixin):
 
     )
     current_status = models.TextField(blank=True, null=True)
-    
-    # Required fields for AbstractBaseUser
+    pdf = models.FileField(upload_to ='posters/',  blank=True,
+        null=True,)    # Required fields for AbstractBaseUser
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     
@@ -69,6 +69,8 @@ class Student(models.Model):
     name = models.CharField(max_length=255)
     prn = models.CharField(max_length=20, unique=True)
     department = models.CharField(max_length=100)
+    photo_url = models.URLField(null=True, blank=True)  # URL for the photo if needed
+    is_photo = models.BooleanField(default=False)
     photo = models.ImageField(upload_to='student_photos/', blank=True, null=True)
     
 
@@ -86,28 +88,59 @@ from django.db import models
 from datetime import timedelta
 
 class CommonData(models.Model):
-    start_year = models.DateField()  # Admin provides the start year
-    end_year = models.DateField(blank=True, null=True)  # Calculated field
-    header = models.CharField(max_length=255,default="None")
-    footer = models.CharField(max_length=255,default="None")
-    prn_field = models.CharField(max_length=25, blank=True)
-    image_field = models.CharField(max_length=25, blank=True)
-    name_field = models.CharField(max_length=25)
-    department_field = models.CharField(max_length=25)
+    college = models.ForeignKey(College, on_delete=models.CASCADE,null=True)
+    
+    prn_field = models.CharField(max_length=255, blank=True)
+    image_field = models.CharField(max_length=255, blank=True)
+    name_field = models.CharField(max_length=255,null=True)
+    department_field = models.CharField(max_length=255,null=True)
+
+    
+
+## models.py
+
+from django.db import models
+
+class Year(models.Model):
+    start_year = models.DateField(null=True,unique=True)
+    end_year = models.DateField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
+        # Automatically set end_year
         if self.start_year:
             self.end_year = self.start_year.replace(year=self.start_year.year + 1)
         super().save(*args, **kwargs)
 
-    
-
-class Poster(models.Model):
-    college = models.ForeignKey(College, on_delete=models.CASCADE)
-    data = models.JSONField(null=True)  # Store dynamic companies and PRNs
-    created_at = models.DateTimeField(auto_now_add=True)
-    
     def __str__(self):
-        return f"Poster for {self.college.name}"
+        return f"{self.start_year.year} - {self.end_year.year if self.end_year else 'N/A'}"
+
+    @classmethod
+    def get_solo(cls):
+        # Always return the only Year instance, or create one if missing
+        return cls.objects.first() or cls.objects.create()
+
+
+
+class Company(models.Model):
+    name = models.CharField(max_length=50,unique=True,null=True)
+    lpa = models.DecimalField(max_digits=5, decimal_places=2)  # Adjust max_digits as needed
+
+
+class PlacementData(models.Model):
+    college = models.ForeignKey(College, on_delete=models.CASCADE)
+    # models.py
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True)
+
+
+
+# class Poster(models.Model):
+#     college = models.ForeignKey(College, on_delete=models.CASCADE)
+#     # data = models.JSONField(null=True)  # Store dynamic companies and PRNs
+#     created_at = models.DateTimeField(auto_now_add=True)
+    
+    # def __str__(self):
+    #     return f"Poster for {self.college.name}"
 
 

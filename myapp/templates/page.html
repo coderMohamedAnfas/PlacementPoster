@@ -12,6 +12,11 @@
     <!-- 🌿 Cropper.js CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<!-- Replace this: -->
+<!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
+
+<!-- With this (no CORS issues): -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Google Fonts: Poppins + Montserrat for headings -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Poppins&display=swap" rel="stylesheet" />
@@ -92,6 +97,20 @@
             color: #e0e0e0 !important;
             text-shadow: none;
             transition: none;
+        }
+        #importTabs{
+            background: linear-gradient(120deg, #16a085, #1abc9c);
+
+        }
+        #importTabs .nav-item {
+            background: rgba(255, 255, 255, 0.3);
+            font-weight: 700;
+            border-radius: 14px;
+            box-shadow: 0 6px 12px rgba(255, 255, 255, 0.35);
+        }
+        #importTabs .active{
+            background: rgba(198, 207, 109, 0.89);
+            
         }
 
         /* 🌿 Reduce Modal Size */
@@ -196,6 +215,93 @@
             margin-bottom: 20px;
         }
 
+        .prn-suggestions {
+    border-radius: 0 0 0.5rem 0.5rem;
+    animation: fadeInDown 0.25s ease-out;
+}
+
+@keyframes fadeInDown {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+/* Animation for valid PRN - green glow pulse */
+@keyframes pulseValid {
+    0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+/* Animation for invalid PRN - shake effect */
+@keyframes shakeInvalid {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+    100% { transform: translateX(0); }
+}
+
+/* Valid style */
+input.student-prn.is-valid {
+    border: 2px solid #28a745;
+    animation: pulseValid 0.8s ease-in-out;
+    background-image: url('https://cdn-icons-png.flaticon.com/512/845/845646.png');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+}
+
+/* Invalid style */
+input.student-prn.is-invalid {
+    border: 2px solid #dc3545;
+    animation: shakeInvalid 0.4s ease-in-out;
+    background-image: url('https://cdn-icons-png.flaticon.com/512/463/463612.png');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+}
+input.student-prn {
+    transition: border 0.3s ease, background-color 0.3s ease;
+}
+@keyframes pulseDuplicate {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+input.duplicate-prn {
+    border: 2px solid #dc3545 !important;
+    animation: pulseDuplicate 0.8s ease-in-out;
+    background-image: url('https://cdn-icons-png.flaticon.com/512/463/463612.png');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+}
+
+.tooltip-inner {
+    background-color: #dc3545 !important; /* red for error */
+    font-weight: bold;
+}
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: #dc3545 !important;
+}
+
+
+.student-photo-placeholder {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #0d6efd;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    border: 2px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
         /* 🌿 Responsive Navbar */
         @media (max-width: 768px) {
             .nav-link {
@@ -224,7 +330,8 @@
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav">
-                    <li class="nav-item">
+                 
+                      <li class="nav-item">
                         <a class="nav-link {% if request.path == '/generate-poster/' %}active{% endif %}"
                             href="{% url 'index' %}">
                             <i class="bi bi-brush"></i> Generator App
@@ -238,6 +345,11 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/students/' %}active{% endif %}" href="{% url 'student_list' %}">
                             <i class="bi bi-people"></i> Students
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/CollegeWiseCompanies/' %}active{% endif %}" href="{% url 'company_students' %}">
+                            <i class="bi bi-mortarboard"></i> Placements
                         </a>
                     </li>
                     <li class="nav-item">
@@ -294,6 +406,8 @@
         {% endif %}
         {% endblock %}
     </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- 🌿 Bootstrap Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>

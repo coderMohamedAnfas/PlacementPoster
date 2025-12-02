@@ -4,26 +4,31 @@
 <div class="container mt-4">
     <h2 class="text-center mb-4">🎓 Manage Students</h2>
 
-    <!-- 🌿 Search & Bulk Action -->
-    <form method="GET" class="mb-3 d-flex">
-        <input type="text" name="q" class="form-control me-2" placeholder="Search by Name or PRN" value="{{ request.GET.q }}">
-        <button type="submit" class="btn btn-success">Search</button>
-    </form>
+    <!-- 🌿 Search, Import, and Delete Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <form method="GET" class="d-flex flex-grow-1 me-2">
+            <input type="text" name="q" class="form-control form-control-sm me-2 w-50" placeholder="Search Name or PRN" value="{{ request.GET.q }}">
+            <button type="submit" class="btn btn-sm btn-success">Search</button>
+        </form>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="bi bi-upload"></i> Import Students
+            </button>
+            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+              + Add Student
+            </button>
+            
+            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
+                <i class="bi bi-trash3-fill"></i> Delete All
+            </button>
+        </div>
+    </div>
 
-   <!-- 🌿 Delete All Students Button -->
-<div class="d-flex justify-content-end mb-4">
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
-        <i class="bi bi-trash3-fill"></i> Delete All Students
-    </button>
-</div>
-
-
-    <!-- 🌿 Student List Table -->
-    <table class="table table-hover">
+    <!-- 🌿 Student Table -->
+    <table class="table table-hover align-middle">
         <thead>
             <tr>
                 <th><input type="checkbox" id="selectAll"></th>
-                <th>Photo</th>
                 <th>PRN</th>
                 <th>Name</th>
                 <th>Department</th>
@@ -35,22 +40,14 @@
             {% for student in students %}
             <tr>
                 <td><input type="checkbox" name="student_ids" value="{{ student.id }}"></td>
-                <td>
-                    {% if student.photo and student.photo.url %}
-                        <img src="{{ student.photo.url }}" class="rounded-circle" width="50" height="50" alt="Photo">
-                    {% else %}
-                        <img src="D:\MYCOLLEGEPROJECT\mysite\media\student_photos\_photo.jpg" class="rounded-circle" width="50" height="50" alt="Default Photo">
-                    {% endif %}
-                </td>
-                
                 <td>{{ student.prn }}</td>
                 <td>{{ student.name }}</td>
                 <td>{{ student.department }}</td>
                 <td>
                     {% if student.prn in placed_prns %}
-                    <span class="badge bg-success">Placed</span>
+                        <span class="badge bg-success">Placed</span>
                     {% else %}
-                    <span class="badge bg-secondary">Not Placed</span>
+                        <span class="badge bg-secondary">Not Placed</span>
                     {% endif %}
                 </td>
                 <td>
@@ -59,78 +56,248 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" class="text-center text-muted">No students found.</td>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <p>No students found. Please use the import feature below.</p>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">Import Students</button>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-
-    <!-- 🌿 Delete All Confirmation Modal -->
-    <div class="modal fade" id="deleteAllModal" tabindex="-1" aria-labelledby="deleteAllModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="deleteAllModalLabel">Confirm Delete</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to delete <strong>all students</strong> and their associated photos? This action cannot be undone.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form method="POST" action="{% url 'delete_all_students' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">Yes, Delete All</button>
-                    </form>
-                </div>
+ <!-- 🌿 Delete All Confirmation Modal -->
+ <div class="modal fade" id="deleteAllModal" tabindex="-1" aria-labelledby="deleteAllModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAllModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong>all students</strong> and their associated photos? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'delete_all_students' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, Delete All</button>
+                </form>
             </div>
         </div>
     </div>
+</div>
+<!-- Add Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <form method="POST" enctype="multipart/form-data" action="{% url 'add_student' %}">
+        {% csrf_token %}
+        <div class="modal-header bg-secondary text-white rounded-top-4">
+          <h5 class="modal-title" id="addStudentLabel">Add New Student</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-    <!-- 🌿 Pagination Controls -->
-    <nav aria-label="Page navigation">
+        <div class="modal-body px-4 py-3">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Student Name</label>
+              <input type="text" name="name" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">PRN</label>
+              <input type="text" name="prn" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Department</label>
+              <input type="text" name="department" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">College</label>
+              <input type="hidden" name="college" class="form-control" value="{{ request.user.id }}">
+              <input type="text" readonly name="Name" class="form-control" value="{{ request.user.name }}">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Upload Photo (optional)</label>
+              <input type="file" name="photo" class="form-control">
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_photo" id="is_photo">
+                <label class="form-check-label" for="is_photo">
+                  Mark photo as uploaded
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light rounded-bottom-4">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Add Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+    <!-- 🌿 Pagination -->
+    {% if students.has_other_pages %}
+    <nav aria-label="Student pagination">
         <ul class="pagination justify-content-center">
             {% if students.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ students.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" title="First Page">&laquo;&laquo;</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ students.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" title="Previous Page">&laquo;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo;&laquo;</span></li>
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
             {% endif %}
 
-            <li class="page-item disabled">
-                <span class="page-link">Page {{ students.number }} of {{ students.paginator.num_pages }}</span>
-            </li>
+            {% for num in students.paginator.page_range %}
+                {% if num >= students.number|add:'-2' and num <= students.number|add:'2' %}
+                    <li class="page-item {% if num == students.number %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
 
             {% if students.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ students.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ students.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
-                </a>
-            </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ students.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" title="Next Page">&raquo;</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ students.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" title="Last Page">&raquo;&raquo;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                <li class="page-item disabled"><span class="page-link">&raquo;&raquo;</span></li>
             {% endif %}
         </ul>
     </nav>
+    {% endif %}
 
-</div>
+    <!-- 🌟 Import Students Modal -->
+<div class="modal fade" id="importModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="importModalLabel">
+            <i class="bi bi-person-plus-fill me-2"></i>Import Students
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+   
+        <div class="modal-body">
+                 <!-- Google Sheet Upload -->{% if not has_common_data %}
+  <div class="text-end mb-3">
+    <a href="{% url 'map_headers_and_import' %}" class="btn btn-info px-4">
+      <i class="bi bi-cloud-upload"></i> Upload Sheet URL
+    </a>
+  </div>     
+  {% else %}
+          <!-- Nav Tabs -->
+          <ul class="nav nav-tabs nav-tabs-bordered mb-3" id="importTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="sheet-tab" data-bs-toggle="tab" data-bs-target="#sheetTab" type="button" role="tab">
+                <i class="bi bi-link-45deg me-1"></i> Google Sheet
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="excel-tab" data-bs-toggle="tab" data-bs-target="#excelTab" type="button" role="tab">
+                <i class="bi bi-file-earmark-excel me-1"></i> Excel Upload
+              </button>
+            </li>
+          </ul>
+  
+          <!-- Tab Content -->
+          <div class="tab-content" id="importTabContent">
 
+
+
+            <div class="tab-pane fade show active" id="sheetTab" role="tabpanel" aria-labelledby="sheet-tab">
+              <form method="POST" action="{% url 'sheet_url_upload' %}" id="sheetForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label for="sheet_url" class="form-label fw-bold">Google Sheet URL</label>
+                  <input
+                  type="url"
+                  name="sheet_url"
+                  id="sheet_url"
+                  class="form-control"
+                  placeholder="Paste your Google Sheet URL here"
+                  value="{{ url|default:'' }}"
+                  required>
+                
+                  <small class="form-text text-muted">Make sure the sheet is publicly accessible or shared appropriately.</small>
+                </div>
+                <div class="text-end">
+                  <button type="submit" class="btn btn-success" id="sheetSubmitBtn">
+                    <span class="spinner-border spinner-border-sm d-none" id="sheetSpinner" role="status" aria-hidden="true"></span>
+                    Import from Sheet
+                  </button>
+                </div>
+              </form>
+            </div>
+  
+            <!-- Excel Upload -->
+            <div class="tab-pane fade" id="excelTab" role="tabpanel" aria-labelledby="excel-tab">
+              <form method="POST" action="{% url 'upload_excel' %}" enctype="multipart/form-data" id="excelForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label for="excel_file" class="form-label fw-bold">Upload Excel File</label>
+                  <input type="file" name="excel_file" accept=".xlsx" class="form-control" required>
+                  <small class="form-text text-muted">Only .xlsx files are accepted. Ensure proper format.</small>
+                </div>
+                <div class="text-end">
+                  <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-upload me-1"></i>Upload Excel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+  
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i>Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
+{% endif %} 
+<!-- JS: Checkbox select all -->
 <script>
-    // Select/Deselect All
-    document.getElementById('selectAll').addEventListener('change', function() {
-        let checkboxes = document.querySelectorAll('input[name="student_ids"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
-        });
+    document.getElementById('selectAll').addEventListener('change', function () {
+        document.querySelectorAll('input[name="student_ids"]').forEach(cb => cb.checked = this.checked);
     });
 </script>
+
+<!-- JS: Show spinner during import -->
+<script>
+    document.getElementById('sheetForm').addEventListener('submit', function () {
+        document.getElementById('sheetSubmitBtn').setAttribute('disabled', true);
+        document.getElementById('sheetSpinner').classList.remove('d-none');
+    });
+</script>
+<script>
+    // Sheet form spinner
+    document.getElementById('sheetForm').addEventListener('submit', function () {
+      const spinner = document.getElementById('sheetSpinner');
+      const btn = document.getElementById('sheetSubmitBtn');
+  
+      spinner.classList.remove('d-none');
+      btn.setAttribute('disabled', true);
+    });
+  </script>
+  
 {% endblock %}

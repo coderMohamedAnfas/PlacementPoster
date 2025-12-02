@@ -10,8 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+
 import os
 from pathlib import Path
+
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +33,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["placement.gptcpalakkad.ac.in","*"]
 
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://placement.gptcpalakkad.ac.in",
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -163,3 +170,5 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'mohamedanfas7578@gmail.com'
 EMAIL_HOST_PASSWORD = 'rwua xkgs ibie fnhd'
+DEFAULT_FROM_MAIL = EMAIL_HOST_USER
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
